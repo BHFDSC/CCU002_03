@@ -1,0 +1,381 @@
+---
+title: "COVID vaccination and myocarditis and pericarditis"
+author: '[Fatemeh Torabi](mailto:fatemeh.torabi@swansea.ac.uk)'
+date: "Last edited `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '2'
+    code_folding: hide
+  word_document:
+    toc: yes
+    toc_depth: '2'
+toc-title: Contents
+always_allow_html: yes
+header-includes: null
+---
+
+```{r global_options, include=FALSE}
+library(knitr)
+setwd("P:/torabif/workspace/CCU0002-03")
+knitr::opts_chunk$set(fig.path = 'figures/', fig.align = 'center', echo = FALSE, warning = FALSE, message = FALSE)
+
+pkgs <- c(
+    "assertr",
+    "beepr",
+    "broom",
+    "dplyr",
+    "data.table",
+    "dtplyr",
+    "forcats",
+    "ggplot2",
+    "ggthemes",
+    "knitr",
+    "kableExtra",
+    "mice",
+    "janitor",
+    "lubridate",
+    "qs",
+    "rmarkdown",
+    "sailr",
+    "scales",
+    "stringr",
+    "readr",
+    "survival",
+    "tableone",
+    "tidyr",
+    "RODBC",
+    "Cairo",
+    "lattice",
+    "getopt"
+)
+
+for (pkg in pkgs) {
+    suppressWarnings(
+        suppressPackageStartupMessages(
+            library(pkg, character.only = TRUE)
+        )
+    )
+    message("\t", pkg, sep = "")
+}
+```
+
+```{r "loginSctn", eval=TRUE, echo = FALSE }
+source("S:/0911 - Utilising routine data and machine learning techniques to discover new multi/FT/R_login/login_box.r");
+login = getLogin('torabif');
+sql = odbcConnect('PR_SAIL',login[1],login[2]);
+login = 0
+```
+<!-------------------------------------------------------------------------------------------->
+\newpage
+\tableofcontents
+\newpage
+
+## Introduction
+
+There has been reports on possible association between the second dose of
+COVID-19 vaccination (Pfizer-BioNTech and Moderna) with with myocarditis or 
+myopericarditis. 
+The patients affected were mostly males, younger than 50 years old and
+had an illness of chest pain associated with fever and with a rise in cardiac 
+specific troponins that later fully recovered. In some patients, cardiac 
+magnetic resonance imaging (MRI) demonstrated typical signs of myocarditis.
+Whilst this illness appears self-limiting, it is important to understand its 
+frequency because these vaccines are currently the backbone of the COVID-19 
+control program in younger people.
+
+In addition, it is important to clarify whether the risk of events seen after
+the second vaccination dose is similar or different to the risk after the 
+first vaccination dose.
+
+Myocarditis and pericarditis are rare conditions. We will conduct this study 
+through pooled analyses of linked healthcare data from the populations of 
+England and Wales (total populations of around 57 million and 3 million respectively). 
+The very large population size is needed to detect sufficient numbers of these 
+rare health conditions for analyses to be statistically robust. 
+
+In addition, the linked health data come from mutiple sources (e.g. primary care,
+secondary care, death registries, COVID testing and vaccination data), providing
+comprehensive information for defining the exposure of interest (vaccination), the outcome
+of interest (myocarditis or pericarditis), key characteristics of the population
+(e.g., age, sex, ethnicity) and other important comorbidities (e.g. prior COVID infection) 
+
+## Research Hypotheses
+
+There is a higher risk of myocarditis or pericarditis after COVID-19 vaccination than before or
+without vaccination, that varies with vaccine type and by first or second vaccination dose
+
+
+## Timeline
+
+* observation period: 2020-12-08 to 2021-06-30
+
+## Phenotype list
+
+The following list of phenotypes was provided to the project
+
+```{r phenorg, eval=TRUE, echo=FALSE}
+
+org.phen <- sqlQuery(sql,"
+      SELECT * FROM (
+    	SELECT DISTINCT name, code, DESC FROM SAILWWMCCV.PHEN_ICD10_MYOCARDITIS 
+    	UNION 
+    	SELECT DISTINCT name, code, DESC FROM SAILWWMCCV.PHEN_ICD10_PERICARDITIS
+    	)	ORDER BY code;
+        ")
+
+#events <- format(events,big.mark=',')
+kable(org.phen)%>%
+  kable_paper("hover", full_width=F)
+
+```
+
+Codes were matched to the following diagnosis codes in Patient Episode Dataset for Wales (PEDW)
+
+```{r phenpedw, eval=TRUE, echo=FALSE}
+
+pedw.phen <- sqlQuery(sql,"
+      SELECT DISTINCT ALT_CODE , DESCRIPTION FROM SAILUKHDV.ICD10_CODES_AND_TITLES_AND_METADATA icatam 
+      WHERE ALT_CODE IN (SELECT DISTINCT DIAG_CD_1234 FROM sailwWMCCV.ccu0002_3_pedw_outcome)
+      ORDER BY ALT_CODE;
+                      ")
+kable(pedw.phen)%>%
+  kable_paper("hover", full_width=F)
+
+```
+
+
+## Cohort eligibility
+
+**Please note:** That the <5 counts that can be seen in the 'Events Diff' column are referring to records have been removed due to either incomplete or erroneous information. This means that these are not a privacy risk.
+
+```{r summary, echo = FALSE, message = FALSE}
+d_analysis <- qread("data/cohort_raw.qs")
+
+read_csv("results/t_sample_selection_summary.csv", col_types = cols()) %>%
+kable(
+    digits = 1,
+    format.args = list(big.mark = ","),
+    col.names = c(
+        "Step",
+        "Sample criteria",
+        "n",
+        "Diff",
+        "(%)",
+        "n",
+        "Diff",
+        "(%)"
+    )
+) %>%
+kable_styling(
+    bootstrap_options = "striped",
+    full_width = FALSE
+) %>%
+add_header_above(c(
+    " "                    = 2,
+    "Individuals"          = 3,
+    "Events"               = 3
+))
+```
+
+
+Total number of cases in pre and post vaccinated periods
+
+#### **Table 1:** Baseline characteristics for the cases and controls of the study cohort.
+
+```{r baseline, echo = FALSE, message = FALSE}
+library(qs)
+d_analysis <- qread("data/analysis_cohort.qs")
+#d_analysis$has_outcome[is.na(d_analysis$has_outcome)] <- 0
+
+d_analysis[d_analysis$cov_dose1_age < 40,"age_cat"]="< 40";
+d_analysis[d_analysis$cov_dose1_age >= 40 & d_analysis$cov_dose1_age < 69,"age_cat"]="4069";
+d_analysis[d_analysis$cov_dose1_age >= 70,"age_cat"]="70";
+
+xvar <- c(
+    "cov_dose1_age",
+    "age_cat",
+    "cov_dose1_sex",
+    "cov_dose1_ethnicity",
+    "cov_dose1_deprivation",
+    "vaccination_dose1_product",
+    "vaccination_dose2_product"
+    )
+
+d_analysis$age_cat <- as.factor(d_analysis$age_cat )
+d_analysis$cov_dose1_sex <- as.factor(d_analysis$cov_dose1_sex)
+d_analysis$cov_dose1_ethnicity <- as.factor(d_analysis$cov_dose1_ethnicity)
+d_analysis$cov_dose1_deprivation <- as.factor(d_analysis$cov_dose1_deprivation)
+d_analysis$vaccination_dose1_product <- as.factor(d_analysis$vaccination_dose1_product)
+d_analysis$vaccination_dose2_product <- as.factor(d_analysis$vaccination_dose2_product)
+
+table_one <-
+    d_analysis %>%
+    CreateTableOne(
+        vars = xvar,
+        data = .,
+##        strata = "has_outcome",
+        test = FALSE
+    )
+library(tableone)
+
+tab1<- as.data.frame(print(table_one, printToggle = FALSE, test=TRUE));
+
+
+#A font package that allows bringing in Windows fonts. This was done so that we can use unicode characters.
+#install.packages("extrafont",repo="http://cran.rstudio.com");
+#library(extrafont)
+
+library(pander)
+
+name=as.character(c("n", 
+                    "Age mean (sd)",
+                    "Age category",
+                    "< 40",
+                    "40-69",
+                    "70+",
+                    "Sex",
+                    "Ethnicity",
+                    "Asian",
+                    "Black",
+                    "Mixed",
+                    "Other",
+                    "White",
+                    "Deprivation WIMD quintile",
+                    "  1 (most deprived)",
+                    "  2","  3","  4",
+                    "  5 (least deprived)", 
+                    "First Vaccine",
+                    "AstraZeneca",
+                    "Moderna",
+                    "Pfizer-BioNTech",
+                    "Second Vaccine",
+                    "AstraZeneca",
+                    "Moderna",
+                    "Pfizer-BioNTech"));
+
+table1 = cbind(name, tab1);
+colnames(table1) <- c("characteristics", "Overall")
+#print using pander
+
+panderOptions('table.alignment.default', function(table1) ifelse(apply(table1, 2, is.numeric), 'right', 'left'));
+pander(table1, row.names=FALSE)
+
+```
+
+
+#### **Table 2:** The following table shows the number of events observed in pre and week1_2 and week3_23 post vaccination hazard ratio of myocarditis or pericarditis post vaccination. Please note that we don't provide at any of the tables total count of events broken down by vaccine type in overall post vacccination period and therefore the masked ('<5') counts for week1_2 and week3_23 can take the full range up to 5. 
+
+
+```{r, echo = FALSE, message = FALSE}
+
+cnt_vac1_az <-      read_csv("results/tbl_event_count_VAC1_any_myo_or_pericarditis_all_vac_az.csv",  col_types = cols())
+cnt_vac1_pf<-       read_csv("results/tbl_event_count_VAC1_any_myo_or_pericarditis_all_vac_pf.csv", col_types = cols())
+cnt_vac2_az<-       read_csv("results/tbl_event_count_VAC2_any_myo_or_pericarditis_all_vac_az.csv", col_types = cols())
+cnt_vac2_pf <-      read_csv("results/tbl_event_count_VAC2_any_myo_or_pericarditis_all_vac_pf.csv", col_types = cols())
+
+cnt_vac1_az <- cnt_vac1_az%>%
+                mutate(vacdose="Dose1 - ChAdOx1")
+cnt_vac1_pf <- cnt_vac1_az%>%
+                mutate(vacdose="Dose1 - BNT162b2")
+cnt_vac2_az <- cnt_vac2_az%>%
+                mutate(vacdose="Dose2 - ChAdOx1")
+cnt_vac2_pf <- cnt_vac2_az%>%
+                mutate(vacdose="Dose2 - BNT162b2")
+            
+
+#model coef:
+
+coef_vac1_az<-    read_csv("results/tbl_hr_+ weeks + agegroup + sex_VAC1_any_myo_or_pericarditis_all_vac_az.csv",               col_types = cols())
+coef_vac1_pf <-   read_csv("results/tbl_hr_+ weeks + agegroup + sex_VAC1_any_myo_or_pericarditis_all_vac_pf.csv", col_types = cols())
+coef_vac2_az <-   read_csv("results/tbl_hr_+ weeks + agegroup + sex_VAC2_any_myo_or_pericarditis_all_vac_az.csv", col_types = cols())
+coef_vac2_pf<-    read_csv("results/tbl_hr_+ weeks + agegroup + sex_VAC2_any_myo_or_pericarditis_all_vac_pf.csv",      col_types = cols())
+
+coef_vac1_az<- coef_vac1_az %>% 
+                mutate(vacdose="Dose1 - ChAdOx1")
+coef_vac1_pf<- coef_vac1_pf %>% 
+                mutate(vacdose="Dose1 - BNT162b2")
+coef_vac2_az<- coef_vac2_az %>% 
+                mutate(vacdose="Dose2 - ChAdOx1")
+coef_vac2_pf<- coef_vac2_pf %>% 
+                mutate(vacdose="Dose2 - BNT162b2")
+
+
+desc <-
+    bind_rows(
+        cnt_vac1_az,
+        cnt_vac2_az,
+        cnt_vac1_pf,
+        cnt_vac2_pf
+      )%>%
+      dplyr::select(vacdose,expo_week,events_total)
+desc$events_total[desc$events_total <5] <- "<5"
+# pretty table -----------------------------------------------------------------
+
+coef <-
+    bind_rows(
+    coef_vac1_az,
+    coef_vac1_pf,
+    coef_vac2_az,
+    coef_vac2_pf
+    ) %>%
+    rename(expo_week=term )%>%
+    dplyr::select(vacdose,expo_week,estimate,conf.low,conf.high)
+
+coef$estimate <- round(coef$estimate,digits=2)
+coef$conf.low <- round(coef$conf.low,digits=2)
+coef$conf.high <- round(coef$conf.high,digits=2)
+coef<- coef %>% 
+  mutate(
+        HR    =format(round(estimate, 2), nsmall=2),
+        ci.95 = str_c("(",conf.low,"to",conf.high,")")
+         )
+
+desc_coef <-
+    desc %>%
+    full_join(coef, by = c("vacdose", "expo_week")) 
+
+coef_table <- desc_coef %>% 
+                  filter(expo_week %in% c("pre expo","week1_2","week3_23")) %>% 
+                  dplyr::select(vacdose,expo_week,events_total,HR,ci.95)
+
+panderOptions('table.alignment.default', function(coef_table) ifelse(apply(coef_table, 2, is.numeric), 'right', 'left'));
+pander(coef_table, row.names=FALSE)
+```
+
+### Error bars for hazard ratio of events **post first vaccination**
+
+```{r, echo = FALSE, message = FALSE}
+library(ggthemes)
+d1<- desc_coef %>% 
+  filter(vacdose=="Dose1 - ChAdOx1" | vacdose=="Dose1 - BNT162b2") %>% 
+  filter(expo_week %in% c("week1_2","week3_23"))
+
+ggplot(d1, aes(x=expo_week, y=estimate, group=vacdose, color=vacdose))+
+  geom_line(alpha= 0.4, size=1.5)+
+  geom_point()+
+  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=0.2)+
+    geom_hline(yintercept = 1, linetype='dotted',col="blue")+
+  theme_classic()
+#  scale_colour_manual(values=c("#B33951","#304C89"))
+
+```
+
+
+### Error bars for hazard ratio of events **post second vaccination**
+
+```{r, echo = FALSE, message = FALSE}
+
+d2<- desc_coef %>% 
+  filter(vacdose=="Dose2 - ChAdOx1" | vacdose=="Dose2 - BNT162b2") %>% 
+  filter(expo_week %in% c("week1_2","week3_23"))
+
+ggplot(d2, aes(x=expo_week, y=estimate, group=vacdose, color=vacdose))+
+  geom_line(alpha= 0.4, size=1.5)+
+  geom_point()+
+  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=0.2)+
+  geom_hline(yintercept = 1, linetype='dotted',col="blue")+
+  theme_classic()
+
+```
