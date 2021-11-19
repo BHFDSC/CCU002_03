@@ -1,0 +1,96 @@
+---
+title: Risk of myocarditis and pericarditis following COVID-19 vaccination in England and Wales
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+df <- data.table::fread("../output/estimates.csv")
+df1 <- data.table::fread("../output/waldtests.csv")
+```
+
+\newpage
+
+# Estimates, overall
+
+## Dose 1
+
+```{r overall_dose1}
+knitr::kable(df[df$dose=="Dose 1" & df$sex=="All" & df$age_group=="All",c("nation","vaccination_product","days_post_vaccination","estimate","conf.low","conf.high","p.value")], digits=2)
+```
+
+## Dose 2
+
+```{r overall_dose2}
+knitr::kable(df[df$dose=="Dose 2" & df$sex=="All" & df$age_group=="All",c("nation","vaccination_product","days_post_vaccination","estimate","conf.low","conf.high","p.value")], digits=2)
+```
+
+\newpage
+
+# Estimates, by sex
+
+Reported for England only due to insufficient events in the subgroups in Wales.
+
+## Dose 1
+
+```{r sex_dose1}
+knitr::kable(df[df$dose=="Dose 1" & df$sex!="All" & df$age_group=="All",c("vaccination_product","days_post_vaccination","estimate","conf.low","conf.high","p.value")], digits=2)
+```
+
+## Dose 2
+
+```{r sex_dose2}}
+knitr::kable(df[df$dose=="Dose 2" & df$sex!="All" & df$age_group=="All",c("vaccination_product","days_post_vaccination","estimate","conf.low","conf.high","p.value")], digits=2)
+```
+
+\newpage
+
+# Estimates, by age group
+
+Reported for England only due to insufficient events in the subgroups in Wales.
+
+## Dose 1
+
+```{r age_dose1}
+knitr::kable(df[df$dose=="Dose 1" & df$sex=="All" & df$age_group!="All",c("vaccination_product","days_post_vaccination","estimate","conf.low","conf.high","p.value")], digits=2)
+```
+
+## Dose 2
+
+```{r age_dose2}}
+knitr::kable(df[df$dose=="Dose 2" & df$sex=="All" & df$age_group!="All",c("vaccination_product","days_post_vaccination","estimate","conf.low","conf.high","p.value")], digits=2)
+```
+
+\newpage
+
+# Heterogeneity p-values
+
+Reported for England only due to insufficient events in the subgroups in Wales.
+
+## Dose 1
+
+### Sex
+
+```{r hetero_sex_dose1}
+knitr::kable(df1[df1$dose=="Dose 1" & df1$interacting_feature=="Sex",c("vaccination_product","days_post_vaccination","p.value")], digits=2)
+```
+
+### Age group
+
+```{r hetero_age_dose1}
+knitr::kable(df1[df1$dose=="Dose 1" & df1$interacting_feature=="Age group",c("vaccination_product","days_post_vaccination","p.value")], digits=2)
+```
+
+## Dose 2
+
+### Sex
+
+```{r hetero_sex_dose2}
+knitr::kable(df1[df1$dose=="Dose 2" & df1$interacting_feature=="Sex",c("vaccination_product","days_post_vaccination","p.value")], digits=2)
+```
+
+### Age group
+
+```{r hetero_age_dose2}
+knitr::kable(df1[df1$dose=="Dose 2" & df1$interacting_feature=="Age group",c("vaccination_product","days_post_vaccination","p.value")], digits=2)
+```
