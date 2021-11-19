@@ -1,0 +1,11 @@
+nation,dose,vaccination_product,days_post_vaccination,events
+England,Dose 1,Not applicable,Before,1307
+England,Dose 1,ChAdOx1-S,0-13,54
+England,Dose 1,BNT162b2,0-13,27
+England,Dose 1,ChAdOx1-S,14+,215
+England,Dose 1,BNT162b2,14+,152
+England,Dose 2,Not applicable,Before,469
+England,Dose 2,ChAdOx1-S,0-13,26
+England,Dose 2,BNT162b2,0-13,22
+England,Dose 2,ChAdOx1-S,14+,22
+England,Dose 2,BNT162b2,14+,51
