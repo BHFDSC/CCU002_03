@@ -4,7 +4,7 @@
 
 * [View the analysis code and phenotypes used in NHS Digital's TRE for England](https://github.com/BHFDSC/CCU002_03/tree/main/england)
 * [View the analysis code and phenotypes used in the SAIL Databank](https://github.com/BHFDSC/CCU002_03/tree/main/wales)
-* [View the code used outside of the environments in order to prepare tables and figures for publication](https://github.com/BHFDSC/CCU002_03/tree/main/outside) to .
+* [View the code used outside of the environments in order to prepare tables and figures for publication](https://github.com/BHFDSC/CCU002_03/tree/main/outside)
 * [View the final ouput of our analysis](https://github.com/BHFDSC/CCU002_03/tree/main/outside/output)
 
 ## Project description
