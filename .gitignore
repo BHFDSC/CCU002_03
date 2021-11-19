@@ -5,3 +5,4 @@ outside/.Rhistory
 outside/output/*
 outside/raw/*
 *.Rproj
+tmp/*
