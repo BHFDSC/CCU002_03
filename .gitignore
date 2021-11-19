@@ -2,7 +2,8 @@
 .DS_Store
 .Rproj.user
 outside/.Rhistory
-outside/output/*
 outside/raw/*
+outside/output/supplement.pdf
+outside/output/estimates.csv
 *.Rproj
 tmp/*
