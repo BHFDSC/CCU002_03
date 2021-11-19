@@ -1,5 +1,12 @@
 # COVID-19 vaccination and disease and the risks of myocarditis and pericarditis
 
+## Contents
+
+* [View the analysis code and phenotypes used in NHS Digital's TRE for England](https://github.com/BHFDSC/CCU002_03/tree/main/england)
+* [View the analysis code and phenotypes used in the SAIL Databank](https://github.com/BHFDSC/CCU002_03/tree/main/wales)
+* [View the code used outside of the environments in order to prepare tables and figures for publication](https://github.com/BHFDSC/CCU002_03/tree/main/outside) to .
+* [View the final ouput of our analysis](https://github.com/BHFDSC/CCU002_03/tree/main/outside/output)
+
 ## Project description
 
 A few case series have reported a temporal association between the second dose of COVID-19 vaccination with Pfizer-BioNTech and Moderna mRNA vaccines and myocarditis or myopericarditis. The patients affected were mostly males, younger than 50 years old and had an illness of chest pain associated with fever and with a rise in cardiac specific troponins that later fully recovered.  In some patients, cardiac magnetic resonance imaging (MRI) demonstrated typical findings of myocarditis.
@@ -13,13 +20,6 @@ Myocarditis and pericarditis are rare conditions. We will conduct this study thr
 ## How to cite this work
 > Citation to follow
 
-## Contents
-
-* Click [here](https://github.com/BHFDSC/CCU002_03/tree/main/england) to view the analysis code and phenotypes used in NHS Digital's TRE for England.
-* Click [here](https://github.com/BHFDSC/CCU002_03/tree/main/wales) to view the analysis code and phenotypes used in the SAIL Databank.
-* Click [here](https://github.com/BHFDSC/CCU002_03/tree/main/outside) to view the code used outside of the environments in order to prepare tables and figures for publication.
-* Click [here](https://github.com/BHFDSC/CCU002_03/tree/main/outside/output) to view the final ouput of our analysis.
- 
 ## Project approval
 
 This is a sub-project of [project CCU002](https://github.com/BHFDSC/CCU002) approved by the CVD-COVID-UK / COVID-IMPACT Approvals & Oversight Board (sub-project: CCU002_03).
