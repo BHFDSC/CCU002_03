@@ -13,14 +13,13 @@ Myocarditis and pericarditis are rare conditions. We will conduct this study thr
 ## How to cite this work
 > Citation to follow
 
-## Code
+## Contents
 
-* Click [here] to view the analysis code used in NHS Digital's TRE for England.
-* Click [here] to view the analysis code used in the SAIL Databank.
-* Click [here] to view the code used outside of NHS Digital's TRE for England in order to prepare tables and figures for publication.
-* Phenotyping algorithms and codelists used in NHS Digital's TRE for England are available [here]
-* Phenotyping algorithms and codelists used in the SAIL Databank are available [here]
-
+* Click [here](https://github.com/BHFDSC/CCU002_03/tree/main/england) to view the analysis code and phenotypes used in NHS Digital's TRE for England.
+* Click [here](https://github.com/BHFDSC/CCU002_03/tree/main/wales) to view the analysis code and phenotypes used in the SAIL Databank.
+* Click [here](https://github.com/BHFDSC/CCU002_03/tree/main/outside) to view the code used outside of the environments in order to prepare tables and figures for publication.
+* Click [here](https://github.com/BHFDSC/CCU002_03/tree/main/outside/output) to view the final ouput of our analysis.
+ 
 ## Project approval
 
 This is a sub-project of [project CCU002](https://github.com/BHFDSC/CCU002) approved by the CVD-COVID-UK / COVID-IMPACT Approvals & Oversight Board (sub-project: CCU002_03).
