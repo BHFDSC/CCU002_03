@@ -116,4 +116,5 @@ df$vaccination_product <- dplyr::recode(df$vaccination_product , "vac_az" = "ChA
 # Save -------------------------------------------------------------------------
 
 df <- df[,c("nation","dose","age_group","sex","vaccination_product","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
+colnames(df) <- c("nation","dose","age_group","sex","exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")
 data.table::fwrite(df,"output/estimates.csv")

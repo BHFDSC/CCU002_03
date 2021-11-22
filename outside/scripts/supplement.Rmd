@@ -5,14 +5,35 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+
+doses <- data.table::fread("../output/doses.csv")
+
 df <- data.table::fread("../output/estimates.csv")
 df$nation <- factor(df$nation, levels = c("All","England","Wales"))
 df$dose <- factor(df$dose, levels = c("Dose 1","Dose 2"))
 df$age_group <- factor(df$age_group, levels = c("All","<40","40-69","70+"))
 df$sex <- factor(df$sex, levels = c("All","Male","Female"))
-df$vaccination_product <- factor(df$vaccination_product, levels = c("BNT162b2","ChAdOx1-S"))
+df$exposure <- factor(df$exposure, levels = c("BNT162b2","ChAdOx1-S"))
 df$days_post_vaccination <- factor(df$days_post_vaccination, levels = c("0-13","14+"))
+
 df1 <- data.table::fread("../output/waldtests.csv")
+
+```
+
+\newpage
+
+# Sample size
+
+## Dose 1
+
+```{r n_dose1}
+knitr::kable(doses[doses$analysis=="Dose 1",c("exposure","England","Wales","total")], digits=2)
+```
+
+## Dose 2
+
+```{r n_dose2}
+knitr::kable(doses[doses$analysis=="Dose 2",c("exposure","England","Wales","total")], digits=2)
 ```
 
 \newpage
@@ -22,15 +43,15 @@ df1 <- data.table::fread("../output/waldtests.csv")
 ## Dose 1
 
 ```{r overall_dose1}
-tmp <- df[df$dose=="Dose 1" & df$sex=="All" & df$age_group=="All",c("nation","vaccination_product","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$nation,tmp$vaccination_product,tmp$days_post_vaccination),], digits=2)
+tmp <- df[df$dose=="Dose 1" & df$sex=="All" & df$age_group=="All",c("nation","exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$nation,tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 ## Dose 2
 
 ```{r overall_dose2}
-tmp <- df[df$dose=="Dose 2" & df$sex=="All" & df$age_group=="All",c("nation","vaccination_product","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$nation,tmp$vaccination_product,tmp$days_post_vaccination),], digits=2)
+tmp <- df[df$dose=="Dose 2" & df$sex=="All" & df$age_group=="All",c("nation","exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$nation,tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 \newpage
@@ -42,15 +63,15 @@ Reported for England only due to insufficient events in the subgroups in Wales.
 ## Dose 1
 
 ```{r sex_dose1}
-tmp <- df[df$dose=="Dose 1" & df$sex!="All" & df$age_group=="All",c("vaccination_product","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$vaccination_product,tmp$days_post_vaccination,tmp$sex),], digits=2)
+tmp <- df[df$dose=="Dose 1" & df$sex!="All" & df$age_group=="All",c("exposure","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$sex),], digits=2)
 ```
 
 ## Dose 2
 
 ```{r sex_dose2}}
-tmp <- df[df$dose=="Dose 2" & df$sex!="All" & df$age_group=="All",c("vaccination_product","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$vaccination_product,tmp$days_post_vaccination,tmp$sex),], digits=2)
+tmp <- df[df$dose=="Dose 2" & df$sex!="All" & df$age_group=="All",c("exposure","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$sex),], digits=2)
 ```
 
 \newpage
@@ -62,15 +83,15 @@ Reported for England only due to insufficient events in the subgroups in Wales.
 ## Dose 1
 
 ```{r age_dose1}
-tmp <- df[df$dose=="Dose 1" & df$sex=="All" & df$age_group!="All",c("vaccination_product","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$vaccination_product,tmp$days_post_vaccination,tmp$age_group),], digits=2)
+tmp <- df[df$dose=="Dose 1" & df$sex=="All" & df$age_group!="All",c("exposure","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$age_group),], digits=2)
 ```
 
 ## Dose 2
 
 ```{r age_dose2}
-tmp <- df[df$dose=="Dose 2" & df$sex=="All" & df$age_group!="All",c("vaccination_product","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$vaccination_product,tmp$days_post_vaccination,tmp$age_group),], digits=2)
+tmp <- df[df$dose=="Dose 2" & df$sex=="All" & df$age_group!="All",c("exposure","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$age_group),], digits=2)
 ```
 
 \newpage
@@ -84,15 +105,15 @@ Reported for England only due to insufficient events in the subgroups in Wales.
 ### Sex
 
 ```{r hetero_sex_dose1}
-tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Sex",c("vaccination_product","days_post_vaccination","p.value")]
-knitr::kable(tmp[order(tmp$vaccination_product,tmp$days_post_vaccination),], digits=2)
+tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Sex",c("exposure","days_post_vaccination","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 ### Age group
 
 ```{r hetero_age_dose1}
-tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Age group",c("vaccination_product","days_post_vaccination","p.value")]
-knitr::kable(tmp[order(tmp$vaccination_product,tmp$days_post_vaccination),], digits=2)
+tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Age group",c("exposure","days_post_vaccination","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 ## Dose 2
@@ -100,13 +121,13 @@ knitr::kable(tmp[order(tmp$vaccination_product,tmp$days_post_vaccination),], dig
 ### Sex
 
 ```{r hetero_sex_dose2}
-tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Sex",c("vaccination_product","days_post_vaccination","p.value")]
-knitr::kable(tmp[order(tmp$vaccination_product,tmp$days_post_vaccination),], digits=2)
+tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Sex",c("exposure","days_post_vaccination","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 ### Age group
 
 ```{r hetero_age_dose2}
-tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Age group",c("vaccination_product","days_post_vaccination","p.value")]
-knitr::kable(tmp[order(tmp$vaccination_product,tmp$days_post_vaccination),], digits=2)
+tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Age group",c("exposure","days_post_vaccination","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```

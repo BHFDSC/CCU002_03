@@ -11,10 +11,10 @@ df <- df[df$nation=="All" | (df$nation=="England" & (df$age_group!="All" | df$se
 # Load event counts ------------------------------------------------------------
 
 counts <- data.table::fread("output/counts.csv",
-                            select = c("dose","vaccination_product","days_post_vaccination","events"),
+                            select = c("dose","exposure","days_post_vaccination","events"),
                             data.table = FALSE)
 
-df <- dplyr::left_join(df, counts, by = c("dose","vaccination_product","days_post_vaccination"))
+df <- dplyr::left_join(df, counts, by = c("dose","exposure","days_post_vaccination"))
 
 # Generate table info ----------------------------------------------------------
 
@@ -33,7 +33,7 @@ df$age_sex <- paste0(df$age_group, "/", df$sex)
 # Add dummy points to determine y axis range -----------------------------------
 
 tmp <- data.frame(analysis = rep(c("Overall","Age","Sex"),each = 4),
-                  vaccination_product = "dummy",
+                  exposure = "dummy",
                   days_post_vaccination = rep(c("0-13","14+"), each = 2),
                   dose = "Dose 1",
                   estimate = c(rep(c(0.9*2^-1,1.1*2^2),2),rep(c(0.85*2^-4,1.15*2^4),2),rep(c(0.85*2^-2,1.15*2^3),2)),
@@ -53,23 +53,27 @@ df$facet_lab <- ifelse(df$dose=="Dose 2" & df$analysis=="Sex",4,df$facet_lab)
 df$facet_lab <- ifelse(df$dose=="Dose 1" & df$analysis=="Age",5,df$facet_lab)
 df$facet_lab <- ifelse(df$dose=="Dose 2" & df$analysis=="Age",6,df$facet_lab)
 
+# Make dose labels -------------------------------------------------------------
+
+doses <- data.table::fread("output/doses.csv", data.table = FALSE)
+dose1_lab <- paste0("Dose 1 (N = ",doses[doses$analysis=="Dose 1" & doses$exposure=="Total",]$total,")\n\nOverall")
+dose2_lab <- paste0("Dose 2 (N = ",doses[doses$analysis=="Dose 2" & doses$exposure=="Total",]$total,")\n\nOverall")
+
 # Order variables --------------------------------------------------------------
 
 df$dose <- factor(df$dose, levels=c("Dose 1", "Dose 2"))
 
-df$vaccination_product <- factor(df$vaccination_product, levels = c("BNT162b2","dummy","ChAdOx1-S"))
+df$exposure <- factor(df$exposure, levels = c("BNT162b2","dummy","ChAdOx1-S"))
 
 df$facet_lab <- factor(df$facet_lab, 
                        levels = 1:6,
-                       labels = c(paste0("Dose 1 (N = 52,026,053)\n\nOverall"),
-                                  paste0("Dose 2 (N = 25,517,187)\n\nOverall"),
-                                  "By sex"," By sex ","By age group"," By age group "))
+                       labels = c(dose1_lab, dose2_lab,"By sex"," By sex ","By age group"," By age group "))
 
 # Make plot element of figure --------------------------------------------------
 
-p1 <- ggplot2::ggplot(df, mapping = ggplot2::aes(x=days_post_vaccination, y=estimate, color=vaccination_product, shape = age_sex)) +
+p1 <- ggplot2::ggplot(df, mapping = ggplot2::aes(x=days_post_vaccination, y=estimate, color=exposure, shape = age_sex)) +
   ggplot2::geom_hline(yintercept=1, lwd=0.5, col="dark grey") +
-  ggplot2::geom_linerange(ggplot2::aes(ymin=conf.low, ymax=conf.high, color=vaccination_product), 
+  ggplot2::geom_linerange(ggplot2::aes(ymin=conf.low, ymax=conf.high, color=exposure), 
                           position=ggplot2::position_dodge(0.5)) + 
   ggplot2::geom_point(position=ggplot2::position_dodge(0.5), size = 2.5) + 
   ggplot2::labs(x = "Days since vaccination", 
@@ -98,15 +102,15 @@ p1 <- ggplot2::ggplot(df, mapping = ggplot2::aes(x=days_post_vaccination, y=esti
 
 # Make table element of figure -------------------------------------------------
 
-tmp <- df[df$age_group=="All" & df$sex=="All" & df$vaccination_product!="dummy",c("days_post_vaccination","vaccination_product","info","facet_lab")]
-tmp$vaccination_product <- as.character(tmp$vaccination_product)
-tmp <- rbind(tmp,c("0-13","Comparator",paste0(counts[counts$days_post_vaccination=="Before" & counts$dose=="Dose 1",]$events," events"),"Dose 1 (N = 52,026,053)\n\nOverall"))
-tmp <- rbind(tmp,c("0-13","Comparator",paste0(counts[counts$days_post_vaccination=="Before" & counts$dose=="Dose 2",]$events," events"),"Dose 2 (N = 25,517,187)\n\nOverall"))
-tmp$vaccination_product <- factor(tmp$vaccination_product, levels = c("BNT162b2","ChAdOx1-S","Comparator"))
+tmp <- df[df$age_group=="All" & df$sex=="All" & df$exposure!="dummy",c("days_post_vaccination","exposure","info","facet_lab")]
+tmp$exposure <- as.character(tmp$exposure)
+tmp <- rbind(tmp,c("0-13","Comparator",paste0(counts[counts$days_post_vaccination=="Before" & counts$dose=="Dose 1",]$events," events"),dose1_lab))
+tmp <- rbind(tmp,c("0-13","Comparator",paste0(counts[counts$days_post_vaccination=="Before" & counts$dose=="Dose 2",]$events," events"),dose2_lab))
+tmp$exposure <- factor(tmp$exposure, levels = c("BNT162b2","ChAdOx1-S","Comparator"))
 
 p2 <- tmp %>% 
   ggplot2::ggplot(ggplot2::aes(x = days_post_vaccination)) +
-  ggplot2::geom_text(ggplot2::aes(y = forcats::fct_rev(vaccination_product), label = info),  size=3) +
+  ggplot2::geom_text(ggplot2::aes(y = forcats::fct_rev(exposure), label = info),  size=3) +
   ggplot2::theme_minimal() +
   ggplot2::labs(y = "", x="") +
   ggplot2::theme(axis.line = ggplot2::element_blank(), 

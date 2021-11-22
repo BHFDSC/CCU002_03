@@ -1,4 +1,4 @@
-dose,vaccination_product,days_post_vaccination,interacting_feature,p.value
+dose,exposure,days_post_vaccination,interacting_feature,p.value
 Dose 1,ChAdOx1-S,0-13,Age group,0.0634264421798381
 Dose 1,ChAdOx1-S,14+,Age group,0.0583365070680978
 Dose 1,BNT162b2,0-13,Age group,0.136005456104953

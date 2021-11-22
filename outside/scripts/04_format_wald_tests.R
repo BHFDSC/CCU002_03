@@ -20,8 +20,8 @@ df$days_post_vaccination  <- dplyr::recode(df$days_post_vaccination , "week1_2" 
 
 # Label vaccine type -----------------------------------------------------------
 
-df$vaccination_product <- factor(df$vac_str, levels=c("vac_az", "vac_pf"))
-df$vaccination_product <- dplyr::recode(df$vaccination_product , "vac_az" = "ChAdOx1-S", "vac_pf"="BNT162b2")
+df$exposure <- factor(df$vac_str, levels=c("vac_az", "vac_pf"))
+df$exposure <- dplyr::recode(df$exposure , "vac_az" = "ChAdOx1-S", "vac_pf"="BNT162b2")
 
 # Label interacting feature ----------------------------------------------------
 
@@ -30,5 +30,5 @@ df$interacting_feature <- dplyr::recode(df$interacting_feature, "agegroup" = "Ag
 
 # Save  ------------------------------------------------------------------------
 
-df <- df[,c("dose","vaccination_product","days_post_vaccination","interacting_feature","p.value")]
+df <- df[,c("dose","exposure","days_post_vaccination","interacting_feature","p.value")]
 data.table::fwrite(df,"output/waldtests.csv")
