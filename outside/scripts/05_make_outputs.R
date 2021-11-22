@@ -63,7 +63,7 @@ df$facet_lab <- factor(df$facet_lab,
                        levels = 1:6,
                        labels = c(paste0("Dose 1 (N = 52,026,053)\n\nOverall"),
                                   paste0("Dose 2 (N = 25,517,187)\n\nOverall"),
-                                  "Sex"," Sex ","Age group"," Age group "))
+                                  "By sex"," By sex ","By age group"," By age group "))
 
 # Make plot element of figure --------------------------------------------------
 
@@ -86,7 +86,7 @@ p1 <- ggplot2::ggplot(df, mapping = ggplot2::aes(x=days_post_vaccination, y=esti
                   shape=ggplot2::guide_legend(ncol=3, byrow=TRUE, order = 2)) +
   ggplot2::theme_minimal() +
   ggplot2::theme(plot.background = ggplot2::element_rect(fill = "white", colour = "white"),
-                 panel.grid.major.x = ggplot2::element_blank(),
+                 panel.grid.major = ggplot2::element_blank(),
                  panel.grid.minor = ggplot2::element_blank(),
                  panel.border = ggplot2::element_rect(colour = "grey", fill=NA, size=1),
                  legend.key = ggplot2::element_rect(colour = NA, fill = NA),
