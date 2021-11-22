@@ -3,7 +3,5 @@
 .Rproj.user
 outside/.Rhistory
 outside/raw/*
-outside/output/supplement.pdf
-outside/output/estimates.csv
 *.Rproj
 tmp/*
