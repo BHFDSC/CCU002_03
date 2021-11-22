@@ -67,5 +67,5 @@ counts$vaccination_product <- dplyr::recode(counts$vaccination_product, "none_or
 # Save counts ------------------------------------------------------------------
 
 counts <- counts[,c("dose","vaccination_product","days_post_vaccination","events_total")]
-colnames(counts) <- c("dose","vaccination_product","days_post_vaccination","events")
+colnames(counts) <- c("dose","exposure","days_post_vaccination","events")
 data.table::fwrite(counts,"output/counts.csv")
