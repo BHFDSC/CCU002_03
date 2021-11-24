@@ -56,8 +56,8 @@ df$facet_lab <- ifelse(df$dose=="Dose 2" & df$analysis=="Age",6,df$facet_lab)
 # Make dose labels -------------------------------------------------------------
 
 doses <- data.table::fread("output/doses.csv", data.table = FALSE)
-dose1_lab <- paste0("Dose 1 (N = ",doses[doses$analysis=="Dose 1" & doses$exposure=="Total",]$total,")\n\nOverall")
-dose2_lab <- paste0("Dose 2 (N = ",doses[doses$analysis=="Dose 2" & doses$exposure=="Total",]$total,")\n\nOverall")
+dose1_lab <- paste0("Dose 1 (N = ",format(doses[doses$analysis=="Dose 1" & doses$exposure=="Total",]$total, big.mark = ",", scientific = FALSE),")\n\nOverall")
+dose2_lab <- paste0("Dose 2 (N = ",format(doses[doses$analysis=="Dose 2" & doses$exposure=="Total",]$total, big.mark = ",", scientific = FALSE),")\n\nOverall")
 
 # Order variables --------------------------------------------------------------
 

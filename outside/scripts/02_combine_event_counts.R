@@ -33,10 +33,10 @@ counts$nation <- "England"
 
 # Load Welsh counts ------------------------------------------------------------
 
-counts3 <- read_excel("raw/Wales_events.xlsx", 
-                      sheet = "event_counts_by_vacc",
-                      col_types = c("text","text", "text", "skip", "numeric", 
-                                    "skip", "skip", "skip"), skip = 10)
+counts3 <- readxl::read_excel("raw/Wales_events.xlsx", 
+                              sheet = "event_counts_by_vacc",
+                              col_types = c("text","text", "text", "skip", "numeric", 
+                                            "skip", "skip", "skip"), skip = 10)
 
 counts3 <- counts3[!(counts3$Vaccine_dose=="dose 2" & counts3$Vaccine_type=="UV" & counts3$Exposure_week=="pre expo"),]
 counts3$Vaccine_type <- ifelse(counts3$Exposure_week=="pre expo","none_or_before",counts3$Vaccine_type)
