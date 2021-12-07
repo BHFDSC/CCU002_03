@@ -5,3 +5,4 @@ outside/.Rhistory
 outside/raw/*
 *.Rproj
 tmp/*
+outside/scripts/.Rhistory
