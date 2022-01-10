@@ -1,14 +1,34 @@
 rm(list = ls())
 
-# Load data --------------------------------------------------------------------
+library(magrittr)
 
-dose1 <- data.table::fread("raw/wald_VAC1_myoperi.csv", data.table = FALSE)
-dose1$dose <- "Dose 1"
+# List English count files -----------------------------------------------------
 
-dose2 <- data.table::fread("raw/wald_VAC2_myoperi.csv", data.table = FALSE)
-dose2$dose <- "Dose 2"
+files <- c(list.files(path = "raw/england", pattern = "wald", full.names = TRUE))
 
-df <- rbind(dose1,dose2)
+# Combine files in a single data frame -----------------------------------------
+
+df <- NULL
+
+for (f in files) {
+  
+  # Load data ------------------------------------------------------------------
+  
+  tmp <- data.table::fread(f, data.table = FALSE)
+  tmp <- tmp[!is.na(tmp$p.value),]
+  
+  # Add meta data --------------------------------------------------------------
+  
+  tmp$dose <- paste0("Dose ",gsub(".*?([0-9]+).*", "\\1", f))
+  tmp$priorcovid <- "Mixed"
+  tmp$priorcovid <- ifelse(grepl("priorcovid0",f),"No",tmp$priorcovid)
+  tmp$priorcovid <- ifelse(grepl("priorcovid1",f),"Yes",tmp$priorcovid)
+  
+  # Append to master data frame ------------------------------------------------
+  
+  df <- plyr::rbind.fill(df,tmp)
+  
+}
 
 # Label days post vaccination ------------------------------------------------------------------
 
@@ -30,5 +50,5 @@ df$interacting_feature <- dplyr::recode(df$interacting_feature, "agegroup" = "Ag
 
 # Save  ------------------------------------------------------------------------
 
-df <- df[,c("dose","exposure","days_post_vaccination","interacting_feature","p.value")]
+df <- df[df$priorcovid=="Mixed",c("dose","exposure","days_post_vaccination","interacting_feature","p.value")]
 data.table::fwrite(df,"output/waldtests.csv")

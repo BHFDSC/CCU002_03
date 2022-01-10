@@ -6,12 +6,11 @@ library(patchwork)
 # Load data --------------------------------------------------------------------
 
 df <- data.table::fread("output/estimates.csv", data.table = FALSE)
-df <- df[df$nation=="All" | (df$nation=="England" & (df$age_group!="All" | df$sex!="All")),]
+df <- df[df$prior_covid=="Mixed" & (df$nation=="All" | (df$nation=="England" & (df$age_group!="All" | df$sex!="All"))),]
 
 # Load event counts ------------------------------------------------------------
 
 counts <- data.table::fread("output/counts.csv",
-                            select = c("dose","exposure","days_post_vaccination","events"),
                             data.table = FALSE)
 
 df <- dplyr::left_join(df, counts, by = c("dose","exposure","days_post_vaccination"))
@@ -56,8 +55,33 @@ df$facet_lab <- ifelse(df$dose=="Dose 2" & df$analysis=="Age",6,df$facet_lab)
 # Make dose labels -------------------------------------------------------------
 
 doses <- data.table::fread("output/doses.csv", data.table = FALSE)
-dose1_lab <- paste0("Dose 1 (N = ",format(doses[doses$analysis=="Dose 1" & doses$exposure=="Total",]$total, big.mark = ",", scientific = FALSE),")\n\nOverall")
-dose2_lab <- paste0("Dose 2 (N = ",format(doses[doses$analysis=="Dose 2" & doses$exposure=="Total",]$total, big.mark = ",", scientific = FALSE),")\n\nOverall")
+dose1_overall <- paste0("Dose 1 \nN = ",format(doses[doses$analysis=="Dose 1" & doses$exposure=="Total",]$total, big.mark = ",", scientific = FALSE),"\n\nOverall")
+dose2_overall <- paste0("Dose 2 \nN = ",format(doses[doses$analysis=="Dose 2" & doses$exposure=="Total",]$total, big.mark = ",", scientific = FALSE),"\n\nOverall")
+
+# Make dose labels -------------------------------------------------------------
+
+waldtests <- data.table::fread("output/waldtests.csv", data.table = FALSE)
+waldtests$p.value <- ifelse(waldtests$p.value<0.01,"p<0.01",paste0("p=",sprintf("%.2f",waldtests$p.value)))
+
+dose1_sex <- paste0("By sex\n\nHeterogeneity p-values:\nBNT162b2, 0-13 ",waldtests[waldtests$dose=="Dose 1" & waldtests$exposure=="BNT162b2" & waldtests$interacting_feature=="Sex" & waldtests$days_post_vaccination=="0-13",]$p.value,
+                    ", 14+ ",waldtests[waldtests$dose=="Dose 1" & waldtests$exposure=="BNT162b2" & waldtests$interacting_feature=="Sex" & waldtests$days_post_vaccination=="14+",]$p.value,
+                    "\nChAdOx1-S, 0-13 ",waldtests[waldtests$dose=="Dose 1" & waldtests$exposure=="ChAdOx1-S" & waldtests$interacting_feature=="Sex" & waldtests$days_post_vaccination=="0-13",]$p.value,
+                    ", 14+ ",waldtests[waldtests$dose=="Dose 1" & waldtests$exposure=="ChAdOx1-S" & waldtests$interacting_feature=="Sex" & waldtests$days_post_vaccination=="14+",]$p.value)
+
+dose2_sex <- paste0("By sex\n\nHeterogeneity p-values:\nBNT162b2, 0-13 ",waldtests[waldtests$dose=="Dose 2" & waldtests$exposure=="BNT162b2" & waldtests$interacting_feature=="Sex" & waldtests$days_post_vaccination=="0-13",]$p.value,
+                    ", 14+ ",waldtests[waldtests$dose=="Dose 2" & waldtests$exposure=="BNT162b2" & waldtests$interacting_feature=="Sex" & waldtests$days_post_vaccination=="14+",]$p.value,
+                    "\nChAdOx1-S, 0-13 ",waldtests[waldtests$dose=="Dose 2" & waldtests$exposure=="ChAdOx1-S" & waldtests$interacting_feature=="Sex" & waldtests$days_post_vaccination=="0-13",]$p.value,
+                    ", 14+ ",waldtests[waldtests$dose=="Dose 2" & waldtests$exposure=="ChAdOx1-S" & waldtests$interacting_feature=="Sex" & waldtests$days_post_vaccination=="14+",]$p.value)
+
+dose1_age <- paste0("By age group\n\nHeterogeneity p-values:\nBNT162b2, 0-13 ",waldtests[waldtests$dose=="Dose 1" & waldtests$exposure=="BNT162b2" & waldtests$interacting_feature=="Age group" & waldtests$days_post_vaccination=="0-13",]$p.value,
+                    ", 14+ ",waldtests[waldtests$dose=="Dose 1" & waldtests$exposure=="BNT162b2" & waldtests$interacting_feature=="Age group" & waldtests$days_post_vaccination=="14+",]$p.value,
+                    "\nChAdOx1-S, 0-13 ",waldtests[waldtests$dose=="Dose 1" & waldtests$exposure=="ChAdOx1-S" & waldtests$interacting_feature=="Age group" & waldtests$days_post_vaccination=="0-13",]$p.value,
+                    ", 14+ ",waldtests[waldtests$dose=="Dose 1" & waldtests$exposure=="ChAdOx1-S" & waldtests$interacting_feature=="Age group" & waldtests$days_post_vaccination=="14+",]$p.value)
+
+dose2_age <- paste0("By age group\n\nHeterogeneity p-values:\nBNT162b2, 0-13 ",waldtests[waldtests$dose=="Dose 2" & waldtests$exposure=="BNT162b2" & waldtests$interacting_feature=="Age group" & waldtests$days_post_vaccination=="0-13",]$p.value,
+                    ", 14+ ",waldtests[waldtests$dose=="Dose 2" & waldtests$exposure=="BNT162b2" & waldtests$interacting_feature=="Age group" & waldtests$days_post_vaccination=="14+",]$p.value,
+                    "\nChAdOx1-S, 0-13 ",waldtests[waldtests$dose=="Dose 2" & waldtests$exposure=="ChAdOx1-S" & waldtests$interacting_feature=="Age group" & waldtests$days_post_vaccination=="0-13",]$p.value,
+                    ", 14+ ",waldtests[waldtests$dose=="Dose 2" & waldtests$exposure=="ChAdOx1-S" & waldtests$interacting_feature=="Age group" & waldtests$days_post_vaccination=="14+",]$p.value)
 
 # Order variables --------------------------------------------------------------
 
@@ -67,7 +91,7 @@ df$exposure <- factor(df$exposure, levels = c("BNT162b2","dummy","ChAdOx1-S"))
 
 df$facet_lab <- factor(df$facet_lab, 
                        levels = 1:6,
-                       labels = c(dose1_lab, dose2_lab,"By sex"," By sex ","By age group"," By age group "))
+                       labels = c(dose1_overall, dose2_overall, dose1_sex, dose2_sex, dose1_age, dose2_age))
 
 # Make plot element of figure --------------------------------------------------
 
@@ -104,8 +128,8 @@ p1 <- ggplot2::ggplot(df, mapping = ggplot2::aes(x=days_post_vaccination, y=esti
 
 tmp <- df[df$age_group=="All" & df$sex=="All" & df$exposure!="dummy",c("days_post_vaccination","exposure","info","facet_lab")]
 tmp$exposure <- as.character(tmp$exposure)
-tmp <- rbind(tmp,c("0-13","Comparator",paste0(counts[counts$days_post_vaccination=="Before" & counts$dose=="Dose 1",]$events," events"),dose1_lab))
-tmp <- rbind(tmp,c("0-13","Comparator",paste0(counts[counts$days_post_vaccination=="Before" & counts$dose=="Dose 2",]$events," events"),dose2_lab))
+tmp <- rbind(tmp,c("0-13","Comparator",paste0(counts[counts$days_post_vaccination=="Before" & counts$dose=="Dose 1",]$events," events"),dose1_overall))
+tmp <- rbind(tmp,c("0-13","Comparator",paste0(counts[counts$days_post_vaccination=="Before" & counts$dose=="Dose 2",]$events," events"),dose2_overall))
 tmp$exposure <- factor(tmp$exposure, levels = c("BNT162b2","ChAdOx1-S","Comparator"))
 
 p2 <- tmp %>% 

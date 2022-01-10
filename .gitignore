@@ -6,3 +6,4 @@ outside/raw/*
 *.Rproj
 tmp/*
 outside/scripts/.Rhistory
+outside/output/hidden*
