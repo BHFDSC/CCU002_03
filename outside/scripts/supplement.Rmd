@@ -17,6 +17,7 @@ df$exposure <- factor(df$exposure, levels = c("BNT162b2","ChAdOx1-S"))
 df$days_post_vaccination <- factor(df$days_post_vaccination, levels = c("0-13","14+"))
 
 df1 <- data.table::fread("../output/waldtests.csv")
+df1$p.value <- ifelse(df1$p.value<0.01,"<0.01",sprintf("%.2f",df1$p.value))
 
 ```
 
