@@ -1,11 +1,11 @@
-dose,exposure,days_post_vaccination,events
-Dose 1,Not applicable,Before,1383
-Dose 1,ChAdOx1-S,0-13,57
-Dose 1,BNT162b2,0-13,30
-Dose 1,ChAdOx1-S,14+,230
-Dose 1,BNT162b2,14+,155
-Dose 2,Not applicable,Before,493
-Dose 2,ChAdOx1-S,0-13,29
-Dose 2,BNT162b2,0-13,25
-Dose 2,ChAdOx1-S,14+,29
-Dose 2,BNT162b2,14+,57
+dose,exposure,days_post_vaccination,prior_covid,events
+Dose 1,Not applicable,Before,Mixed,1535
+Dose 1,ChAdOx1-S,0-13,Mixed,57
+Dose 1,BNT162b2,0-13,Mixed,32
+Dose 1,ChAdOx1-S,14+,Mixed,230
+Dose 1,BNT162b2,14+,Mixed,165
+Dose 2,Not applicable,Before,Mixed,505
+Dose 2,ChAdOx1-S,0-13,Mixed,29
+Dose 2,BNT162b2,0-13,Mixed,30
+Dose 2,ChAdOx1-S,14+,Mixed,29
+Dose 2,BNT162b2,14+,Mixed,78

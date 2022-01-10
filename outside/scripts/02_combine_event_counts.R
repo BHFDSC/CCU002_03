@@ -2,56 +2,66 @@ rm(list = ls())
 
 library(magrittr)
 
-# Load English dose 1 counts ---------------------------------------------------
+# List English count files -----------------------------------------------------
 
-counts1 <- data.table::fread("raw/England_dose1_events.csv",
-                             select = c("vac","expo_week","events_total"),
-                             data.table = FALSE)
+files <- c(list.files(path = "raw/england", pattern = "tbl_event_count_", full.names = TRUE))
 
-counts1$vac <- ifelse(grepl("week", counts1$expo_week),counts1$vac,"none_or_before")
-counts1 <- unique(counts1)
-counts1 <- aggregate(events_total ~ vac + expo_week, data = counts1, sum, na.rm = TRUE) 
-counts1$dose <- "Dose 1"
-counts1 <- counts1[counts1$expo_week!="all post expo",]
+# Combine files in a single data frame -----------------------------------------
 
-# Load English dose 2 counts ---------------------------------------------------
+counts <- NULL
 
-counts2 <- data.table::fread("raw/England_dose2_events.csv",
-                             select = c("vac","expo_week","events_total"),
-                             data.table = FALSE)
+for (f in files) {
+  
+  # Load data ------------------------------------------------------------------
+  
+  tmp <- data.table::fread(f, 
+                           select = c("expo_week","events_total"),
+                           data.table = FALSE)
+  
+  # Add meta data --------------------------------------------------------------
+  
+  tmp$nation <- stringr::str_to_title(gsub("/.*","",gsub("raw/","",f)))
+  tmp$dose <- paste0("Dose ",gsub(".*?([0-9]+).*", "\\1", f))
+  tmp$vac_str <- gsub(".*all_","",gsub(".csv","",f))
+  
+  tmp$priorcovid <- "Mixed"
+  tmp$priorcovid <- ifelse(grepl("priorcovid0",f),"No",tmp$priorcovid)
+  tmp$priorcovid <- ifelse(grepl("priorcovid1",f),"Yes",tmp$priorcovid)
 
-counts2$vac <- ifelse(grepl("week", counts2$expo_week),counts2$vac,"none_or_before")
-counts2 <- unique(counts2)
-counts2 <- aggregate(events_total ~ vac + expo_week, data = counts2, sum, na.rm = TRUE)
-counts2$dose <- "Dose 2"
-counts2 <- counts2[counts2$expo_week!="all post expo",]
+  # Append to master data frame ------------------------------------------------
+  
+  counts <- plyr::rbind.fill(counts,tmp)
+  
+}
 
-# Combine English counts -------------------------------------------------------
-
-counts <- rbind(counts1, counts2)
-counts$nation <- "England"
+counts <- counts[counts$expo_week!="all post expo",]
+counts$vac_str <- ifelse(counts$expo_week=="pre expo","none_or_before",counts$vac_str)
+counts <- unique(counts)
 
 # Load Welsh counts ------------------------------------------------------------
 
-counts3 <- readxl::read_excel("raw/Wales_events.xlsx", 
+counts_wales <- readxl::read_excel("raw/wales/event_counts_by_vacc-estimatedMasked_vmw.xlsx",
                               sheet = "event_counts_by_vacc",
-                              col_types = c("text","text", "text", "skip", "numeric", 
+                              col_types = c("text","text", "text", "skip", "numeric",
                                             "skip", "skip", "skip"), skip = 10)
 
-counts3 <- counts3[!(counts3$Vaccine_dose=="dose 2" & counts3$Vaccine_type=="UV" & counts3$Exposure_week=="pre expo"),]
-counts3$Vaccine_type <- ifelse(counts3$Exposure_week=="pre expo","none_or_before",counts3$Vaccine_type)
-counts3$Vaccine_type <- ifelse(counts3$Vaccine_type=="AZ","vac_az",counts3$Vaccine_type)
-counts3$Vaccine_type <- ifelse(counts3$Vaccine_type=="Pf","vac_pf",counts3$Vaccine_type)
-counts3$Vaccine_dose <- gsub("dose","Dose",counts3$Vaccine_dose)
-counts3$Exposure_week <- gsub("-","_",counts3$Exposure_week)
-colnames(counts3) <- c("dose","vac","expo_week","events_total")
-counts3 <- aggregate(events_total ~ vac + expo_week + dose, data = counts3, sum, na.rm = TRUE)
-counts3$nation <- "Wales"
+counts_wales <- counts_wales[!(counts_wales$Vaccine_dose=="dose 2" & counts_wales$Vaccine_type=="UV" & counts_wales$Exposure_week=="pre expo"),]
+counts_wales$Vaccine_type <- ifelse(counts_wales$Exposure_week=="pre expo","none_or_before",counts_wales$Vaccine_type)
+counts_wales$Vaccine_type <- ifelse(counts_wales$Vaccine_type=="AZ","vac_az",counts_wales$Vaccine_type)
+counts_wales$Vaccine_type <- ifelse(counts_wales$Vaccine_type=="Pf","vac_pf",counts_wales$Vaccine_type)
+counts_wales$Vaccine_dose <- gsub("dose","Dose",counts_wales$Vaccine_dose)
+counts_wales$Exposure_week <- gsub("-","_",counts_wales$Exposure_week)
+colnames(counts_wales) <- c("dose","vac_str","expo_week","events_total")
+counts_wales <- aggregate(events_total ~ vac_str + expo_week + dose, data = counts_wales, sum, na.rm = TRUE)
+counts_wales$nation <- "Wales"
+counts_wales$priorcovid <- "Mixed"
+counts <- rbind(counts, counts_wales)
 
 # Combine Welsh and English counts ---------------------------------------------
 
-counts <- rbind(counts, counts3)
-counts <- aggregate(events_total ~ vac + expo_week + dose, data = counts, sum, na.rm = TRUE)
+meta <- aggregate(events_total ~ vac_str + expo_week + dose + priorcovid, data = counts, sum, na.rm = TRUE)
+meta$nation <- "All"
+counts <- rbind(counts, meta)
 
 # Label days post vaccination --------------------------------------------------
 
@@ -61,11 +71,12 @@ counts$days_post_vaccination  <- dplyr::recode(counts$days_post_vaccination , "w
 
 # Label vaccine type -----------------------------------------------------------
 
-counts$vaccination_product <- factor(counts$vac, levels=c("none_or_before","vac_az", "vac_pf"))
+counts$vaccination_product <- factor(counts$vac_str, levels=c("none_or_before","vac_az", "vac_pf"))
 counts$vaccination_product <- dplyr::recode(counts$vaccination_product, "none_or_before" = "Not applicable", "vac_az" = "ChAdOx1-S", "vac_pf"="BNT162b2")
 
 # Save counts ------------------------------------------------------------------
 
-counts <- counts[,c("dose","vaccination_product","days_post_vaccination","events_total")]
-colnames(counts) <- c("dose","exposure","days_post_vaccination","events")
-data.table::fwrite(counts,"output/counts.csv")
+counts <- counts[c("nation","dose","vaccination_product","days_post_vaccination","priorcovid","events_total")]
+colnames(counts) <- c("nation","dose","exposure","days_post_vaccination","prior_covid","events")
+data.table::fwrite(counts,"output/hidden_counts.csv")
+data.table::fwrite(counts[counts$prior_covid=="Mixed" & counts$nation=="All",c("dose","exposure","days_post_vaccination","prior_covid","events")],"output/counts.csv")
