@@ -7,6 +7,15 @@
 
 # COMMAND ----------
 
+# MAGIC %md ## Clear cache
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CLEAR CACHE
+
+# COMMAND ----------
+
 # MAGIC %md  ## Define functions
 
 # COMMAND ----------
@@ -89,7 +98,7 @@ for dose in ["dose1","dose2"]:
 # MAGIC SELECT DISTINCT *
 # MAGIC FROM global_temp.ccu002_03_vaccination_wide
 # MAGIC WHERE PERSON_ID_DEID IS NOT NULL
-# MAGIC AND ((dose1_date>'2021-01-01') AND (dose1_date IS NOT NULL)) -- remove individuals vacccinated before 1 January 2021 or missing a first dose
+# MAGIC AND ((dose1_date>'2020-12-07') AND (dose1_date IS NOT NULL)) -- remove individuals vacccinated before start of vaccine program or missing a first dose
 # MAGIC AND ((dose1_date < dose2_date) OR (dose2_date IS NULL)) -- remove individuals whose second dose is before their first dose
 # MAGIC AND ((DATEDIFF(dose2_date, dose1_date)>=21) OR (dose2_date IS NULL)) -- remove individuals whose second dose is less than 3 weeks after their first dose
 # MAGIC AND ((dose1_situation IS NULL) AND (dose2_situation IS NULL)) -- remove individuals with a situation (4634 individuals)
