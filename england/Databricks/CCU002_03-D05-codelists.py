@@ -1538,6 +1538,5 @@ create_table("ccu002_03_codelists")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC SELECT DISTINCT name, terminology
+# MAGIC SELECT *
 # MAGIC FROM dars_nic_391419_j3w9t_collab.ccu002_03_codelists
-# MAGIC WHERE name RLIKE 'carditis'
