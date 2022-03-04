@@ -5,7 +5,6 @@ This directory contains the final output from the CCU002_03 analysis as describe
 | counts.csv              | Event counts for myocarditis/pericarditis outcomes in an editable file format.                                      |
 | doses.csv               | Sample sizes by vaccine type in an editable file format.                                                            |
 | estimates.csv           | Estimates from this analysis in an editable file format.                                                            |
-| excessrisks.csv         | Excess risk estimates in an editable file format.                                                                   |
 | figure_agedist.jpeg     | Figure showing the age distrubution for our sample.                                                                 |
 | figure_main.jpeg        | Main figure from the manuscript.                                                                                    |
 | figure_outcomes.jpeg    | Figure showing the outcomes 'myocarditis' and 'pericarditis' seperately                                             |

@@ -187,15 +187,6 @@ knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 
 \newpage
 
-# Estimated excess risk 90 days post vaccination
-
-```{r excessrisks}
-tmp <- data.table::fread("../output/excessrisks.csv", data.table = FALSE)
-knitr::kable(tmp)
-```
-
-\newpage
-
 # Estimates, by prior history
 
 ```{r echo=FALSE, results = 'asis', out.width="90%"}
