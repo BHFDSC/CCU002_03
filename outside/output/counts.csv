@@ -1,11 +1,29 @@
-dose,exposure,days_post_vaccination,prior_covid,events
-Dose 1,Not applicable,Before,Mixed,1535
-Dose 1,ChAdOx1-S,0-13,Mixed,57
-Dose 1,BNT162b2,0-13,Mixed,32
-Dose 1,ChAdOx1-S,14+,Mixed,230
-Dose 1,BNT162b2,14+,Mixed,165
-Dose 2,Not applicable,Before,Mixed,505
-Dose 2,ChAdOx1-S,0-13,Mixed,29
-Dose 2,BNT162b2,0-13,Mixed,30
-Dose 2,ChAdOx1-S,14+,Mixed,29
-Dose 2,BNT162b2,14+,Mixed,78
+outcome,dose,exposure,days_post_vaccination,prior_covid,events
+myocarditis/pericarditis,Dose 1,ChAdOx1-S,Before,All,1459
+myocarditis/pericarditis,Dose 1,ChAdOx1-S,0-13,All,54
+myocarditis/pericarditis,Dose 1,ChAdOx1-S,14+,All,215
+myocarditis/pericarditis,Dose 1,BNT162b2,Before,All,1459
+myocarditis/pericarditis,Dose 1,BNT162b2,0-13,All,29
+myocarditis/pericarditis,Dose 1,BNT162b2,14+,All,162
+myocarditis,Dose 1,ChAdOx1-S,Before,All,888
+myocarditis,Dose 1,ChAdOx1-S,0+,All,220
+myocarditis,Dose 1,BNT162b2,Before,All,888
+myocarditis,Dose 1,BNT162b2,0+,All,146
+pericarditis,Dose 1,ChAdOx1-S,Before,All,431
+pericarditis,Dose 1,ChAdOx1-S,0+,All,132
+pericarditis,Dose 1,BNT162b2,Before,All,431
+pericarditis,Dose 1,BNT162b2,0+,All,79
+myocarditis/pericarditis,Dose 2,ChAdOx1-S,Before,All,284
+myocarditis/pericarditis,Dose 2,ChAdOx1-S,0-13,All,26
+myocarditis/pericarditis,Dose 2,ChAdOx1-S,14+,All,22
+myocarditis/pericarditis,Dose 2,BNT162b2,Before,All,197
+myocarditis/pericarditis,Dose 2,BNT162b2,0-13,All,27
+myocarditis/pericarditis,Dose 2,BNT162b2,14+,All,72
+myocarditis,Dose 2,ChAdOx1-S,Before,All,176
+myocarditis,Dose 2,ChAdOx1-S,0+,All,27
+myocarditis,Dose 2,BNT162b2,Before,All,129
+myocarditis,Dose 2,BNT162b2,0+,All,66
+pericarditis,Dose 2,ChAdOx1-S,Before,All,107
+pericarditis,Dose 2,ChAdOx1-S,0+,All,22
+pericarditis,Dose 2,BNT162b2,Before,All,67
+pericarditis,Dose 2,BNT162b2,0+,All,33

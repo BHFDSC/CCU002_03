@@ -7,3 +7,4 @@ outside/raw/*
 tmp/*
 outside/scripts/.Rhistory
 outside/output/hidden*
+outside/.RData
