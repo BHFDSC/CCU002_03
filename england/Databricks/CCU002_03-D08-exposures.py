@@ -89,40 +89,36 @@ for dose in ["dose1","dose2"]:
 
 # COMMAND ----------
 
-# MAGIC %md ## Impose vaccine based restrictions
+# MAGIC %sql
+# MAGIC -- Identify people with multiple records and mark as conflicted
+# MAGIC CREATE OR REPLACE GLOBAL TEMP VIEW ccu002_03_vaccination_conflicted AS 
+# MAGIC SELECT *
+# MAGIC FROM (SELECT PERSON_ID_DEID, 
+# MAGIC              CASE WHEN Records_per_Patient>1 THEN 1 ELSE 0 END AS conflicted_vax_record
+# MAGIC       FROM (SELECT PERSON_ID_DEID, count(PERSON_ID_DEID) AS Records_per_Patient
+# MAGIC             FROM global_temp.ccu002_03_vaccination_wide
+# MAGIC             GROUP BY PERSON_ID_DEID))
+# MAGIC WHERE conflicted_vax_record==1
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC CREATE OR REPLACE GLOBAL TEMP VIEW ccu002_03_vaccination_intermediate AS
-# MAGIC SELECT DISTINCT *
-# MAGIC FROM global_temp.ccu002_03_vaccination_wide
-# MAGIC WHERE PERSON_ID_DEID IS NOT NULL
-# MAGIC AND ((dose1_date>'2020-12-07') AND (dose1_date IS NOT NULL)) -- remove individuals vacccinated before start of vaccine program or missing a first dose
-# MAGIC AND ((dose1_date < dose2_date) OR (dose2_date IS NULL)) -- remove individuals whose second dose is before their first dose
-# MAGIC AND ((DATEDIFF(dose2_date, dose1_date)>=21) OR (dose2_date IS NULL)) -- remove individuals whose second dose is less than 3 weeks after their first dose
-# MAGIC AND ((dose1_situation IS NULL) AND (dose2_situation IS NULL)) -- remove individuals with a situation (4634 individuals)
-# MAGIC AND ((dose1_product=dose2_product) OR (dose1_product!=dose2_product AND dose2_date>'2021-05-07')) -- remove individuals with mixed vaccine products before 7 May 2021
-
-# COMMAND ----------
-
-# MAGIC %md ## Restrict to individuals with a single record
-
-# COMMAND ----------
-
-# MAGIC %sql
-# MAGIC CREATE OR REPLACE GLOBAL TEMP VIEW ccu002_03_vaccination AS
-# MAGIC SELECT PERSON_ID_DEID AS NHS_NUMBER_DEID,
-# MAGIC        dose1_date AS vaccination_dose1_date,
-# MAGIC        dose1_product AS vaccination_dose1_product,
-# MAGIC        dose2_date AS vaccination_dose2_date,
-# MAGIC        dose2_product AS vaccination_dose2_product
-# MAGIC FROM global_temp.ccu002_03_vaccination_intermediate
-# MAGIC WHERE PERSON_ID_DEID IN (SELECT PERSON_ID_DEID
-# MAGIC                          FROM (SELECT count(PERSON_ID_DEID) AS Records_per_Patient, PERSON_ID_DEID
-# MAGIC                                FROM global_temp.ccu002_03_vaccination_intermediate
-# MAGIC                                GROUP BY PERSON_ID_DEID)
-# MAGIC                          WHERE Records_per_Patient==1)
+# MAGIC -- Restrict to one record per person with indicator for a conflicted record
+# MAGIC CREATE OR REPLACE GLOBAL TEMP VIEW ccu002_03_vaccination AS 
+# MAGIC SELECT vaccination.PERSON_ID_DEID AS NHS_NUMBER_DEID,
+# MAGIC        vaccination.dose1_date AS vaccination_dose1_date,
+# MAGIC        vaccination.dose1_product AS vaccination_dose1_product,
+# MAGIC        vaccination.dose1_situation AS vaccination_dose1_situation,
+# MAGIC        vaccination.dose2_date AS vaccination_dose2_date,
+# MAGIC        vaccination.dose2_product AS vaccination_dose2_product,
+# MAGIC        vaccination.dose2_situation AS vaccination_dose2_situation,
+# MAGIC        conflict.conflicted_vax_record AS vaccination_conflicted
+# MAGIC FROM (SELECT *
+# MAGIC       FROM (SELECT *, row_number() OVER (PARTITION BY PERSON_ID_DEID ORDER BY dose1_date asc) AS record_number
+# MAGIC             FROM (SELECT * 
+# MAGIC                   FROM global_temp.ccu002_03_vaccination_wide))
+# MAGIC       WHERE record_number=1) AS vaccination
+# MAGIC LEFT JOIN global_temp.ccu002_03_vaccination_conflicted AS conflict ON conflict.PERSON_ID_DEID = vaccination.PERSON_ID_DEID
 
 # COMMAND ----------
 

@@ -56,8 +56,11 @@ def drop_table(table_name:str, database_name:str='dars_nic_391419_j3w9t_collab',
 # MAGIC        cohort.NHS_NUMBER_DEID,
 # MAGIC        vaccination.vaccination_dose1_date,
 # MAGIC        vaccination.vaccination_dose1_product,
+# MAGIC        vaccination.vaccination_dose1_situation,
 # MAGIC        vaccination.vaccination_dose2_date,
 # MAGIC        vaccination.vaccination_dose2_product,
+# MAGIC        vaccination.vaccination_dose2_situation,
+# MAGIC        CASE WHEN vaccination.vaccination_conflicted=1 THEN 1 ELSE 0 END AS vaccination_conflicted,
 # MAGIC        FLOOR(DATEDIFF('2020-12-08', cohort.DATE_OF_BIRTH)/365.25) AS cov_dose1_age,
 # MAGIC        cohort.SEX AS cov_dose1_sex,
 # MAGIC        CASE WHEN cohort.CATEGORISED_ETHNICITY IS NULL THEN 'missing' ELSE cohort.CATEGORISED_ETHNICITY END AS cov_dose1_ethnicity,
@@ -74,14 +77,18 @@ def drop_table(table_name:str, database_name:str='dars_nic_391419_j3w9t_collab',
 # MAGIC        cov_dose2_deprivation.cov_dose2_deprivation,
 # MAGIC        CASE WHEN (cov_dose2_pericarditis.cov_dose2_pericarditis=1 OR cov_dose2_myocarditis.cov_dose2_myocarditis=1) THEN 1 ELSE 0 END AS cov_dose2_myo_or_pericarditis,
 # MAGIC        CASE WHEN (cov_dose2_prior_covid19.cov_dose2_prior_covid19=1) THEN 1 ELSE 0 END AS cov_dose2_prior_covid19,
-# MAGIC         cohort.DATE_OF_DEATH AS out_death,
+# MAGIC        cohort.DATE_OF_DEATH AS out_death,
+# MAGIC        out_dose1_any_myocarditis.out_dose1_any_myocarditis AS out_dose1_myocarditis,
+# MAGIC        out_dose1_any_pericarditis.out_dose1_any_pericarditis AS out_dose1_pericarditis,
 # MAGIC        CASE WHEN out_dose1_any_myocarditis.out_dose1_any_myocarditis<=out_dose1_any_pericarditis.out_dose1_any_pericarditis 
 # MAGIC              AND out_dose1_any_myocarditis.out_dose1_any_myocarditis IS NOT NULL AND out_dose1_any_pericarditis.out_dose1_any_pericarditis IS NOT NULL THEN out_dose1_any_myocarditis
 # MAGIC             WHEN out_dose1_any_myocarditis.out_dose1_any_myocarditis>out_dose1_any_pericarditis.out_dose1_any_pericarditis 
 # MAGIC              AND out_dose1_any_myocarditis.out_dose1_any_myocarditis IS NOT NULL AND out_dose1_any_pericarditis.out_dose1_any_pericarditis IS NOT NULL THEN out_dose1_any_pericarditis
 # MAGIC             WHEN out_dose1_any_myocarditis.out_dose1_any_myocarditis IS NOT NULL AND out_dose1_any_pericarditis.out_dose1_any_pericarditis IS NULL THEN out_dose1_any_myocarditis
 # MAGIC             WHEN out_dose1_any_myocarditis.out_dose1_any_myocarditis IS NULL AND out_dose1_any_pericarditis.out_dose1_any_pericarditis IS NOT NULL THEN out_dose1_any_pericarditis
-# MAGIC             ELSE NULL END AS out_dose1_any_myo_or_pericarditis,
+# MAGIC             ELSE NULL END AS out_dose1_any_myo_or_pericarditis,     
+# MAGIC        out_dose2_any_myocarditis.out_dose2_any_myocarditis AS out_dose2_myocarditis,
+# MAGIC        out_dose2_any_pericarditis.out_dose2_any_pericarditis AS out_dose2_pericarditis,
 # MAGIC        CASE WHEN out_dose2_any_myocarditis.out_dose2_any_myocarditis<=out_dose2_any_pericarditis.out_dose2_any_pericarditis 
 # MAGIC              AND out_dose2_any_myocarditis.out_dose2_any_myocarditis IS NOT NULL AND out_dose2_any_pericarditis.out_dose2_any_pericarditis IS NOT NULL THEN out_dose2_any_myocarditis
 # MAGIC             WHEN out_dose2_any_myocarditis.out_dose2_any_myocarditis>out_dose2_any_pericarditis.out_dose2_any_pericarditis 
@@ -118,12 +125,30 @@ def drop_table(table_name:str, database_name:str='dars_nic_391419_j3w9t_collab',
 # MAGIC CREATE OR REPLACE GLOBAL TEMP VIEW ccu002_03_cohort AS
 # MAGIC SELECT *
 # MAGIC FROM global_temp.ccu002_03_cohort_full
-# MAGIC WHERE ((cov_dose1_sex=1) OR (cov_dose1_sex=2)) -- Keep males and females only
-# MAGIC AND (cov_dose1_age<111) -- Remove people older than 110
-# MAGIC AND ((vaccination_dose1_date IS NULL) OR ((vaccination_dose1_date IS NOT NULL) AND (vaccination_dose1_date>='2020-12-08'))) -- Remove people vaccinated before the UK vaccination program began
-# MAGIC AND ((out_death IS NULL) OR ((out_death IS NOT NULL) AND (out_death>='2020-12-08'))) -- Remove people who died before the UK vaccination program began
-# MAGIC AND ((cov_dose1_lsoa IS NULL) OR (LEFT(cov_dose1_lsoa,1)=="E")) -- Remove people not from England
-# MAGIC AND ((cov_dose2_lsoa IS NULL) OR (LEFT(cov_dose2_lsoa,1)=="E")) -- Remove people not from England
+# MAGIC -- Remove people listed as neither 'male' or 'female'
+# MAGIC WHERE ((cov_dose1_sex=1) OR (cov_dose1_sex=2))
+# MAGIC AND ((cov_dose2_sex=1) OR (cov_dose2_sex=2) OR (cov_dose2_sex IS NULL))
+# MAGIC -- Remove people not aged between 12 and 110 inclusive
+# MAGIC AND (cov_dose1_age>=12 AND cov_dose1_age<111) 
+# MAGIC AND ((cov_dose2_age>=cov_dose1_age) OR (cov_dose2_age IS NULL))
+# MAGIC -- Remove people vaccinated before the UK vaccination program began
+# MAGIC AND ((vaccination_dose1_date IS NULL) OR ((vaccination_dose1_date IS NOT NULL) AND (vaccination_dose1_date>='2020-12-08'))) 
+# MAGIC AND ((vaccination_dose2_date IS NULL) OR ((vaccination_dose2_date IS NOT NULL) AND (vaccination_dose2_date>='2020-12-08')))
+# MAGIC -- Remove people who died before the UK vaccination program began
+# MAGIC AND ((out_death IS NULL) OR ((out_death IS NOT NULL) AND (out_death>='2020-12-08'))) 
+# MAGIC -- Remove people not from England
+# MAGIC AND ((cov_dose1_lsoa IS NULL) OR (LEFT(cov_dose1_lsoa,1)=="E"))
+# MAGIC AND ((cov_dose2_lsoa IS NULL) OR (LEFT(cov_dose2_lsoa,1)=="E"))
+# MAGIC -- Remove individuals whose second dose is before their first dose
+# MAGIC AND (((vaccination_dose1_date IS NOT NULL) AND (vaccination_dose2_date IS NOT NULL) AND (vaccination_dose1_date < vaccination_dose2_date)) OR (vaccination_dose1_date IS NULL) OR (vaccination_dose2_date IS NULL)) 
+# MAGIC -- remove individuals whose second dose is less than 3 weeks after their first dose
+# MAGIC AND (((vaccination_dose1_date IS NOT NULL) AND (vaccination_dose2_date IS NOT NULL) AND DATEDIFF(vaccination_dose2_date, vaccination_dose1_date)>=21) OR (vaccination_dose1_date IS NULL) OR (vaccination_dose2_date IS NULL))
+# MAGIC -- Remove individuals with mixed vaccine products before 7 May 2021
+# MAGIC AND (((vaccination_dose1_date IS NOT NULL) AND (vaccination_dose2_date IS NOT NULL) AND (vaccination_dose1_product=vaccination_dose2_product) OR (vaccination_dose1_product!=vaccination_dose2_product AND vaccination_dose2_date>'2021-05-07')) OR (vaccination_dose1_date IS NULL) OR (vaccination_dose2_date IS NULL))
+# MAGIC -- Remove individuals with conflicted vaccination record
+# MAGIC AND (vaccination_conflicted=0)
+# MAGIC -- Remove indiviuduals with a situation attached to any vaccination
+# MAGIC AND ((vaccination_dose1_situation IS NULL) AND (vaccination_dose2_situation IS NULL))
 
 # COMMAND ----------
 
@@ -142,3 +167,24 @@ create_table('ccu002_03_cohort')
 # MAGIC %sql
 # MAGIC -- cohort description for ESCROW to share with SAIL
 # MAGIC DESCRIBE dars_nic_391419_j3w9t_collab.ccu002_03_cohort
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT DISTINCT vaccination_dose1_date AS date, COUNT(NHS_NUMBER_DEID) as N, 1 as dose
+# MAGIC FROM dars_nic_391419_j3w9t_collab.ccu002_03_cohort
+# MAGIC WHERE vaccination_dose1_date IS NOT NULL
+# MAGIC GROUP BY vaccination_dose1_date
+# MAGIC UNION ALL
+# MAGIC SELECT DISTINCT vaccination_dose2_date AS date, COUNT(NHS_NUMBER_DEID) as N, 2 as dose
+# MAGIC FROM dars_nic_391419_j3w9t_collab.ccu002_03_cohort
+# MAGIC WHERE vaccination_dose2_date IS NOT NULL
+# MAGIC GROUP BY vaccination_dose2_date
+# MAGIC ORDER BY date, dose
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT vaccination_dose1_product, vaccination_dose2_product, COUNT(NHS_NUMBER_DEID) as N
+# MAGIC FROM dars_nic_391419_j3w9t_collab.ccu002_03_cohort
+# MAGIC GROUP BY vaccination_dose1_product, vaccination_dose2_product
