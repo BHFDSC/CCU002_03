@@ -1,5 +1,5 @@
 ---
-title: Risk of myocarditis and pericarditis following COVID-19 vaccination in England and Wales
+title: Risk of myocarditis and pericarditis following BNT162b2 and ChAdOx1 COVID-19 vaccinations
 output: pdf_document
 ---
 
@@ -17,7 +17,7 @@ df$exposure <- factor(df$exposure, levels = c("BNT162b2","ChAdOx1-S"))
 df$days_post_vaccination <- factor(df$days_post_vaccination, levels = c("0-13","14+"))
 
 df1 <- data.table::fread("../output/waldtests.csv")
-df1$p.value <- ifelse(df1$p.value<0.01,"<0.01",sprintf("%.2f",df1$p.value))
+df1$p.value <- ifelse(df1$p.value<0.005,"<0.005",sprintf("%.2f",df1$p.value))
 
 ```
 
@@ -28,13 +28,59 @@ df1$p.value <- ifelse(df1$p.value<0.01,"<0.01",sprintf("%.2f",df1$p.value))
 ## Dose 1
 
 ```{r n_dose1}
-knitr::kable(doses[doses$analysis=="Dose 1",c("exposure","England","Wales","total")], digits=2)
+knitr::kable(doses[doses$analysis_dose=="Dose 1",c("analysis_product","sample","N")], digits=2)
 ```
 
 ## Dose 2
 
 ```{r n_dose2}
-knitr::kable(doses[doses$analysis=="Dose 2",c("exposure","England","Wales","total")], digits=2)
+knitr::kable(doses[doses$analysis_dose=="Dose 2",c("analysis_product","sample","N")], digits=2)
+```
+
+\newpage
+
+# Patient characteristics
+
+
+```{r table1}
+table1 <- data.table::fread("../raw/england/table1.csv")
+
+table1$category <- gsub("1_2","Quintile 1 (most deprived)",table1$category)
+table1$category <- gsub("3_4","Quintile 2",table1$category)
+table1$category <- gsub("5_6","Quintile 3",table1$category)
+table1$category <- gsub("7_8","Quintile 4",table1$category)
+table1$category <- gsub("9_10","Quintile 5 (least deprived)",table1$category)
+
+table1 <- suppressWarnings(tidyr::separate(table1, category, into = c("category","subcategory"), sep = "_"))
+
+table1$category <- substr(gsub("([A-Z])"," \\1",table1$category),2,.Machine$integer.max)
+
+table1$subcategory <- ifelse(is.na(table1$subcategory),"",
+                             substr(gsub("([A-Z])"," \\1",table1$subcategory),2,.Machine$integer.max))
+
+table1$subcategory <- ifelse(table1$subcategory=="Asian", "Asian or Asian British", table1$subcategory)
+table1$subcategory <- ifelse(table1$subcategory=="Black", "Black or Black British", table1$subcategory)
+table1$subcategory <- ifelse(table1$subcategory=="Other", "Other Ethnic Groups", table1$subcategory)
+table1$category <- ifelse(table1$category=="Medical History", "History", table1$category)
+table1$subcategory <- ifelse(table1$subcategory=="Myopericarditis", "Myocarditis/pericarditis", table1$subcategory)
+
+table1 <- table1[,c("category","subcategory",
+                    "Pfizer_under40_all","Pfizer_40_69_all","Pfizer_70plus_all",
+                    "AstraZeneca_under40_all","AstraZeneca_40_69_all","AstraZeneca_70plus_all")]
+
+colnames(table1) <- c("Category","Sub-category",
+                    "BNT162b2"," ","  ",
+                    "ChAdOx1","   ","    ")
+
+knitr::kable(table1,)
+```
+
+\newpage
+
+# Patient age distribution
+
+```{r echo=FALSE, results = 'asis', out.width="90%"}
+knitr::include_graphics("../output/figure_agedist.jpeg")
 ```
 
 \newpage
@@ -44,34 +90,36 @@ knitr::kable(doses[doses$analysis=="Dose 2",c("exposure","England","Wales","tota
 ## Dose 1
 
 ```{r overall_dose1}
-tmp <- df[df$dose=="Dose 1" & df$sex=="All" & df$prior_covid=="Mixed" & df$age_group=="All",c("nation","exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$nation,tmp$exposure,tmp$days_post_vaccination),], digits=2)
+tmp <- df[df$dose=="Dose 1" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
+          c("exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 ## Dose 2
 
 ```{r overall_dose2}
-tmp <- df[df$dose=="Dose 2" & df$sex=="All" & df$prior_covid=="Mixed" & df$age_group=="All",c("nation","exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$nation,tmp$exposure,tmp$days_post_vaccination),], digits=2)
+tmp <- df[df$dose=="Dose 2" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
+          c("exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 \newpage
 
 # Estimates, by sex
 
-Reported for England only due to insufficient events in the subgroups in Wales.
-
 ## Dose 1
 
 ```{r sex_dose1}
-tmp <- df[df$dose=="Dose 1" & df$sex!="All" & df$prior_covid=="Mixed" & df$age_group=="All",c("exposure","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
+tmp <- df[df$dose=="Dose 1" & df$sex!="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
+          c("exposure","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$sex),], digits=2)
 ```
 
 ## Dose 2
 
 ```{r sex_dose2}}
-tmp <- df[df$dose=="Dose 2" & df$sex!="All" & df$prior_covid=="Mixed" & df$age_group=="All",c("exposure","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
+tmp <- df[df$dose=="Dose 2" & df$sex!="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
+          c("exposure","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$sex),], digits=2)
 ```
 
@@ -79,19 +127,19 @@ knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$sex),], digits
 
 # Estimates, by age group
 
-Reported for England only due to insufficient events in the subgroups in Wales.
-
 ## Dose 1
 
 ```{r age_dose1}
-tmp <- df[df$dose=="Dose 1" & df$sex=="All" & df$prior_covid=="Mixed" & df$age_group!="All",c("exposure","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
+tmp <- df[df$dose=="Dose 1" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group!="All",
+          c("exposure","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$age_group),], digits=2)
 ```
 
 ## Dose 2
 
 ```{r age_dose2}
-tmp <- df[df$dose=="Dose 2" & df$sex=="All" & df$prior_covid=="Mixed" & df$age_group!="All",c("exposure","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
+tmp <- df[df$dose=="Dose 2" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group!="All",
+          c("exposure","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$age_group),], digits=2)
 ```
 
@@ -99,48 +147,104 @@ knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$age_group),], 
 
 # Heterogeneity p-values
 
-Reported for England only due to insufficient events in the subgroups in Wales.
-
 ## Dose 1
 
 ### Sex
 
 ```{r hetero_sex_dose1}
-tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Sex",c("exposure","days_post_vaccination","p.value")]
+tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Sex" & df1$outcome=="myocarditis/pericarditis",
+           c("exposure","days_post_vaccination","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 ### Age group
 
 ```{r hetero_age_dose1}
-tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Age group",c("exposure","days_post_vaccination","p.value")]
+tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Age group" & df1$outcome=="myocarditis/pericarditis",
+           c("exposure","days_post_vaccination","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
+
+\newpage
 
 ## Dose 2
 
 ### Sex
 
 ```{r hetero_sex_dose2}
-tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Sex",c("exposure","days_post_vaccination","p.value")]
+tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Sex" & df1$outcome=="myocarditis/pericarditis",
+           c("exposure","days_post_vaccination","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 ### Age group
 
 ```{r hetero_age_dose2}
-tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Age group",c("exposure","days_post_vaccination","p.value")]
+tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Age group" & df1$outcome=="myocarditis/pericarditis",
+           c("exposure","days_post_vaccination","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
+
 \newpage
 
 # Estimated excess risk 90 days post vaccination
 
-Reported for England only.
-
 ```{r excessrisks}
 tmp <- data.table::fread("../output/excessrisks.csv", data.table = FALSE)
 knitr::kable(tmp)
+```
+
+\newpage
+
+# Estimates, by prior history
+
+```{r echo=FALSE, results = 'asis', out.width="90%"}
+knitr::include_graphics("../output/figure_priorcovid.jpeg")
+```
+
+```{r prior_history}
+tmp <- df[df$sex=="All" & df$prior_covid!="All" & df$nation=="England" & df$age_group=="All" & df$outcome=="myocarditis/pericarditis",
+          c("prior_covid","dose","exposure","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$prior_covid,tmp$dose,tmp$exposure),], digits=2)
+```
+
+\newpage
+
+# Estimates, by individual outcome
+
+```{r echo=FALSE, results = 'asis', out.width="90%"}
+knitr::include_graphics("../output/figure_outcomes.jpeg")
+```
+
+```{r outcomes}
+tmp <- df[df$sex=="All" & df$prior_covid=="All" & df$nation=="England" & df$age_group=="All" & df$outcome!="myocarditis/pericarditis",
+          c("outcome","dose","exposure","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$outcome,tmp$dose,tmp$exposure),], digits=2)
+```
+
+\newpage
+
+# Dose 1 replication in Wales
+
+```{r echo=FALSE, results = 'asis', out.width="90%"}
+knitr::include_graphics("../output/figure_wales.jpeg")
+```
+
+## Events
+
+```{r wales_events}
+tmp <- data.table::fread("../output/wales.csv")
+tmp <- tmp[,c("outcome","dose","exposure","days_post_vaccination","events")]
+knitr::kable(tmp[order(tmp$outcome,tmp$dose,tmp$exposure),], digits=2)
+```
+
+## Estimates
+
+```{r wales_estimates}
+tmp <- data.table::fread("../output/wales.csv")
+tmp <- tmp[tmp$days_post_vaccination!="Before",
+           c("outcome","dose","exposure","days_post_vaccination","estimate","conf.low","conf.high")]
+knitr::kable(tmp[order(tmp$outcome,tmp$dose,tmp$exposure),], digits=2)
 ```
 
 \newpage

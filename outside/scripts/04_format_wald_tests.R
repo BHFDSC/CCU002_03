@@ -19,8 +19,17 @@ for (f in files) {
   
   # Add meta data --------------------------------------------------------------
   
-  tmp$dose <- paste0("Dose ",gsub(".*?([0-9]+).*", "\\1", f))
-  tmp$priorcovid <- "Mixed"
+  tmp$outcome <- ifelse(grepl("_pericarditis_",f),
+                        "pericarditis",
+                        ifelse(grepl("_myocarditis_",f),
+                               "myocarditis",
+                               ifelse(grepl("_myopericarditis_",f),
+                                      "myocarditis/pericarditis","")))
+  
+  tmp$dose <- paste0("Dose ",substr(gsub(".*VAC","",f),1,1))
+  tmp$exposure <- gsub(".*all_","",gsub(".csv","",f))
+  
+  tmp$priorcovid <- "All"
   tmp$priorcovid <- ifelse(grepl("priorcovid0",f),"No",tmp$priorcovid)
   tmp$priorcovid <- ifelse(grepl("priorcovid1",f),"Yes",tmp$priorcovid)
   
@@ -50,5 +59,5 @@ df$interacting_feature <- dplyr::recode(df$interacting_feature, "agegroup" = "Ag
 
 # Save  ------------------------------------------------------------------------
 
-df <- df[df$priorcovid=="Mixed",c("dose","exposure","days_post_vaccination","interacting_feature","p.value")]
+df <- df[,c("outcome","dose","priorcovid","exposure","days_post_vaccination","interacting_feature","p.value")]
 data.table::fwrite(df,"output/waldtests.csv")

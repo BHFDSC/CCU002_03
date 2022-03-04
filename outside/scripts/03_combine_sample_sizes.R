@@ -2,77 +2,53 @@ rm(list = ls())
 
 library(magrittr)
 
-# Load English data ------------------------------------------------------------
+# Load data --------------------------------------------------------------------
 
-england1 <- read_excel("raw/england/D1D2_counts_20220107.xlsx", 
-                       sheet = "D1", 
-                       col_names = FALSE, 
-                       col_types = c("skip", "text", "numeric"))
+df <- data.table::fread("raw/england/doses.csv", data.table = FALSE)
 
-colnames(england1) <- c("D1","England")
+colnames(df) <- c("D1","D2","N")
 
-england2 <- read_excel("raw/england/D1D2_counts_20220107.xlsx",
-                      sheet = "D2", 
-                      col_types = c("skip", "text", "numeric", "numeric", "numeric", "numeric"), 
-                      skip = 1)
+df$D1 <- ifelse(df$D1=="null","None",df$D1)
+df$D2 <- ifelse(df$D2=="null","None",df$D2)
 
-colnames(england2) <- c("D1","AstraZeneca","Moderna","none","Pfizer")
+# Dose 1 -----------------------------------------------------------------------
 
-england2 <- tidyr::pivot_longer(england2, cols = c("AstraZeneca","Moderna","none","Pfizer"))
-
-colnames(england2) <- c("D1","D2","England")
-
-# Load Welsh data --------------------------------------------------------------
-
-wales2 <- readxl::read_excel("raw/wales/D1 D2 counts.xlsx",
-                            sheet = "D2", 
-                            col_types = c("skip", "text","numeric", "numeric", "numeric","numeric"),
-                            skip = 1)
-
-colnames(wales2) <- c("D1","AstraZeneca","Moderna","Pfizer","none")
-
-wales2 <- tidyr::pivot_longer(wales2, cols = c("AstraZeneca","Moderna","Pfizer","none"))
-
-colnames(wales2) <- c("D1","D2","Wales")
-wales2$Wales <- ifelse(is.na(wales2$Wales),0,wales2$Wales)
-
-wales1 <- wales2[,c("D1","Wales")]
-wales1 <- aggregate(Wales ~ D1, data = wales1, sum, na.rm = TRUE)
-
-# Summarise dose 1 -------------------------------------------------------------
-
-df1 <- merge(england1, wales1, by = "D1")
-df1$total <- df1$England + df1$Wales
-colnames(df1) <- c("exposure","England","Wales","total")
-df1$exposure <- ifelse(df1$exposure %in% c("AstraZeneca","Pfizer"),df1$exposure ,"Comparator")
-df1 <- aggregate(. ~ exposure, data = df1, sum, na.rm = TRUE)
-df1 <- rbind(df1,c("Total",sum(df1$England),sum(df1$Wales),sum(df1$total)))
-df1$analysis <- "Dose 1"
+df1 <- df[,c("D1","N")]
+df1$D1 <- ifelse(df1$D1 %in% c("AstraZeneca","Pfizer"),df1$D1,"Neither")
+df1 <- aggregate(. ~ D1, data = df1, sum, na.rm = TRUE)
+colnames(df1) <- c("analysis_product","N")
+df1$sample <- "Exposed"
+tmp <- df1[,c("sample","N")]
+tmp <- aggregate(. ~ sample, data = tmp, sum, na.rm = TRUE)
+tmp$sample <- "Total"
+tmp$analysis_product <-"AstraZeneca"
+df1 <- rbind(df1,tmp)
+tmp$analysis_product <-"Pfizer"
+df1 <- rbind(df1,tmp)
+df1 <- df1[df1$analysis_product!="Neither",]
+df1$analysis_dose <- "Dose 1"
 
 # Summarise dose 2 -------------------------------------------------------------
 
-df2 <- merge(england2, wales2, by = c("D1","D2"))
-df2$total <- df2$England + df2$Wales
-df2$D1 <- gsub("none","None",df2$D1)
-df2$D2 <- gsub("none","None",df2$D2)
-df2 <- df2[df2$D1!="None",]
-df2$exposure <- ifelse(df2$D1 %in% c("AstraZeneca","Pfizer") & df2$D1==df2$D2,df2$D1 ,"Comparator")
-df2 <- df2[,c("exposure","England","Wales","total")]
-
-df2 <- aggregate(. ~ exposure, data = df2, sum, na.rm = TRUE)
-
-df2 <- rbind(df2,c("Total",sum(df2$England),sum(df2$Wales),sum(df2$total)))
-
-df2$analysis <- "Dose 2"
+df2 <- df
+df2 <- df2[!(df2$D1 %in% c("None","Moderna")),]
+tmp <- df2[df2$D1==df2$D2,]
+tmp$sample <- "Exposed"
+df2$sample <- "Total"
+df2 <- rbind(df2,tmp)
+df2$D2 <- NULL
+df2 <- aggregate(. ~ D1 + sample, data = df2, sum, na.rm = TRUE)
+df2 <- dplyr::rename(df2, "analysis_product" = "D1")
+df2$analysis_dose <- "Dose 2"
 
 # Format table -----------------------------------------------------------------
 
 doses <- rbind(df1,df2)
 
-doses$exposure <- dplyr::recode(doses$exposure, "Pfizer" = "BNT162b2", "AstraZeneca" = "ChAdOx1-S", "Comparator" = "Comparator", "Total" = "Total")
-doses$exposure <- factor(doses$exposure, levels=c("BNT162b2", "ChAdOx1-S", "Comparator", "Total"))
+doses$analysis_product <- dplyr::recode(doses$analysis_product, "Pfizer" = "BNT162b2", "AstraZeneca" = "ChAdOx1-S")
+doses$analysis_product <- factor(doses$analysis_product, levels=c("BNT162b2", "ChAdOx1-S"))
 
-doses <- doses[order(doses$analysis,doses$exposure),c("analysis","exposure","England","Wales","total")]
+doses <- doses[order(doses$analysis_dose,doses$analysis_product),c("analysis_dose","analysis_product","sample","N")]
 
 # Save -------------------------------------------------------------------------
 
