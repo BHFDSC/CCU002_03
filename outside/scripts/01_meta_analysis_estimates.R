@@ -2,8 +2,7 @@ rm(list = ls())
 
 # Identify files containing estimates ------------------------------------------
 
-files <- c(list.files(path = "raw/england", pattern = "tbl_hr_", full.names = TRUE),
-           list.files(path = "raw/wales", pattern = "tbl_hr_", full.names = TRUE))
+files <- c(list.files(path = "raw/england", pattern = "tbl_hr_", full.names = TRUE))
 
 # Combine files in a single data frame -----------------------------------------
 
@@ -17,12 +16,18 @@ for (f in files) {
   
   # Add meta data --------------------------------------------------------------
 
+  tmp$outcome <- ifelse(grepl("_pericarditis_",f),
+                        "pericarditis",
+                        ifelse(grepl("_myocarditis_",f),
+                               "myocarditis",
+                               ifelse(grepl("_myopericarditis_",f),
+                                      "myocarditis/pericarditis","")))
   tmp$nation <- stringr::str_to_title(gsub("/.*","",gsub("raw/","",f)))
   tmp$source <- f
-  tmp$dose <- paste0("Dose ",gsub(".*?([0-9]+).*", "\\1", f))
+  tmp$dose <- paste0("Dose ",substr(gsub(".*VAC","",f),1,1))
   tmp$vac_str <- gsub(".*all_","",gsub(".csv","",f))
   
-  tmp$priorcovid <- "Mixed"
+  tmp$priorcovid <- "All"
   tmp$priorcovid <- ifelse(grepl("priorcovid0",f),"No",tmp$priorcovid)
   tmp$priorcovid <- ifelse(grepl("priorcovid1",f),"Yes",tmp$priorcovid)
 
@@ -43,7 +48,7 @@ for (f in files) {
   
   # Tidy data ------------------------------------------------------------------
   
-  tmp <- tmp[,c("nation","dose","vac_str","term","fml","estimate","conf.low","conf.high","robust.se","p.value","priorcovid","source","interaction")]
+  tmp <- tmp[,c("outcome","nation","dose","vac_str","term","fml","estimate","conf.low","conf.high","robust.se","p.value","priorcovid","source","interaction")]
   tmp <- tmp[grepl("week",tmp$term),]
   
   # Append to master data frame ------------------------------------------------
@@ -57,50 +62,21 @@ for (f in files) {
 df <- df[df$interaction==TRUE | (df$interaction==FALSE & df$fml=="+ weeks + agegroup + sex"),]
 df$interaction <- NULL
 
-# Create master meta-analysis data frame ---------------------------------------
+# Remove empty estimates -------------------------------------------------------
 
-df_meta <- unique(df[df$nation=="Wales",c("dose","vac_str","term","fml","priorcovid")])
-df_meta$nation <- "All"
-df_meta$estimate <- NA
-df_meta$conf.low<- NA
-df_meta$conf.high <- NA
-df_meta$robust.se <- NA
-df_meta$p.value <- NA
-df_meta$source <- "meta-analysis"
-
-# Meta-analyse by nation -------------------------------------------------------
-
-for (i in 1:nrow(df_meta)) {
-  
-  tmp <- df[df$dose==df_meta[i,"dose"] &
-             df$vac_str==df_meta[i,"vac_str"] &
-             df$term==df_meta[i,"term"] &
-             df$fml==df_meta[i,"fml"] &
-             df$priorcovid==df_meta[i,"priorcovid"],]
-  
-  if (nrow(tmp)==2) {
-      tmp_meta <- meta::metagen(log(tmp$estimate),tmp$robust.se, sm = "HR")
-      df_meta[i,]$estimate <- exp(tmp_meta$TE.fixed)
-      df_meta[i,]$conf.low <- exp(tmp_meta$lower.fixed)
-      df_meta[i,]$conf.high <- exp(tmp_meta$upper.fixed)
-      df_meta[i,]$p.value <- tmp_meta$pval.fixed
-      df_meta[i,]$robust.se <- tmp_meta$seTE.fixed
-    }
-    
-}
-
-# Add meta-analysis results to main results ------------------------------------
-
-df <- plyr::rbind.fill(df, df_meta)
 df <- df[!is.na(df$estimate),]
 
-# Label days post vaccination ------------------------------------------------------------------
+# Label days post vaccination --------------------------------------------------
 
-df$days_post_vaccination <- df$term
-df$days_post_vaccination <- ifelse(grepl("week1_2",df$days_post_vaccination ),"week1_2",df$days_post_vaccination )
-df$days_post_vaccination  <- ifelse(grepl("week3_23",df$days_post_vaccination ),"week3_23",df$days_post_vaccination )
-df$days_post_vaccination  <- factor(df$days_post_vaccination ,levels=c("week1_2", "week3_23"))
-df$days_post_vaccination  <- dplyr::recode(df$days_post_vaccination , "week1_2" = "0-13", "week3_23"="14+")
+df$days_post_vaccination <- gsub(" ","",substr(df$term,1,8))
+
+df$days_post_vaccination  <- factor(df$days_post_vaccination,
+                                    levels=c("week1_2", "week3_23", "week1_23"))
+
+df$days_post_vaccination  <- dplyr::recode(df$days_post_vaccination, 
+                                           "week1_2" = "0-13", 
+                                           "week3_23"="14+", 
+                                           "week1_23" = "0+")
 
 # Label age group --------------------------------------------------------------
 
@@ -122,6 +98,6 @@ df$vaccination_product <- dplyr::recode(df$vaccination_product , "vac_az" = "ChA
 
 # Save -------------------------------------------------------------------------
 
-df <- df[,c("nation","dose","age_group","sex","vaccination_product","days_post_vaccination","priorcovid","estimate","conf.low","conf.high","p.value")]
-colnames(df) <- c("nation","dose","age_group","sex","exposure","days_post_vaccination","prior_covid","estimate","conf.low","conf.high","p.value")
+df <- df[,c("outcome","nation","dose","age_group","sex","vaccination_product","days_post_vaccination","priorcovid","estimate","conf.low","conf.high","p.value")]
+colnames(df) <- c("outcome","nation","dose","age_group","sex","exposure","days_post_vaccination","prior_covid","estimate","conf.low","conf.high","p.value")
 data.table::fwrite(df,"output/estimates.csv")
