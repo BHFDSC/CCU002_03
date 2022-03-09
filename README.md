@@ -15,10 +15,10 @@ Whilst this illness appears self-limiting, it is important to understand its fre
 
 In addition, it is important to clarify whether the risk of events seen after the second vaccination dose is similar or different to the risk after the first vaccination dose.
 
-Myocarditis and pericarditis are rare conditions. We will conduct this study through analyses of linked healthcare data from the populations of England and Wales (total populations of around 57 million and 3 million respectively). The very large population size is needed to detect sufficient numbers of these rare health conditions for analyses to be statistically robust. In addition, the linked health data come from mutiple sources (e.g. primary care, secondary care, death registries, COVID testing and vaccination data), providing comprehensive information for defining the exposure of interest (vaccination), the outcome of interest (myocarditis or pericarditis), key characteristics of the population (e.g., age, sex, ethnicity) and other important comorbidities (e.g. prior COVID infection).
+Myocarditis and pericarditis are rare conditions. We have assessed sample size for conducting this study through analyses of linked healthcare data from the populations of England and Wales (total populations of around 57 million and 3 million respectively). The very large population size is needed to detect sufficient numbers of these rare health conditions for analyses to be statistically robust. In addition, the linked health data come from mutiple sources (e.g. primary care, secondary care, death registries, COVID testing and vaccination data), providing more comprehensive information for defining the exposure of interest (vaccination), the rare outcomes of interest (myocarditis or pericarditis), key characteristics of the population (e.g., age, sex, ethnicity) and other important comorbidities (e.g. prior COVID infection).
 
 ## How to cite this work
-> Citation to follow
+https://doi.org/10.1101/2022.03.06.21267462
 
 ## Project approval
 
@@ -50,4 +50,4 @@ The data used in this study are available in the SAIL Databank at Swansea Univer
 
 ## Ethical approval
 
-The North East-Newcastle and North Tyneside 2 research ethics committee provided ethical approval for the CVD-COVID-UK/COVID-IMPACT research programme (REC No 20/NE/0161).
+The North East-Newcastle and North Tyneside 2 research ethics committee provided ethical approval for the CVD-COVID-UK/COVID-IMPACT research programme (REC No 20/NE/0161). In Wales, the work has been approved by SAIL Databank Information Governance Panel under project number WMCC. 
