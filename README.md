@@ -1,4 +1,4 @@
-# COVID-19 vaccination and disease and the risks of myocarditis and pericarditis
+# Risk of myocarditis and pericarditis following BNT162b2 and ChAdOx1 COVID-19 vaccinations
 
 ## Contents
 
@@ -9,13 +9,7 @@
 
 ## Project description
 
-A few case series have reported a temporal association between the second dose of COVID-19 vaccination with Pfizer-BioNTech and Moderna mRNA vaccines and myocarditis or myopericarditis. The patients affected were mostly males, younger than 50 years old and had an illness of chest pain associated with fever and with a rise in cardiac specific troponins that later fully recovered.  In some patients, cardiac magnetic resonance imaging (MRI) demonstrated typical findings of myocarditis.
-
-Whilst this illness appears self-limiting, it is important to understand its frequency because these vaccines are currently the backbone of the COVID-19 vaccine control program in younger people.
-
-In addition, it is important to clarify whether the risk of events seen after the second vaccination dose is similar or different to the risk after the first vaccination dose.
-
-Myocarditis and pericarditis are rare conditions. We have assessed sample size for conducting this study through analyses of linked healthcare data from the populations of England and Wales (total populations of around 57 million and 3 million respectively). The very large population size is needed to detect sufficient numbers of these rare health conditions for analyses to be statistically robust. In addition, the linked health data come from mutiple sources (e.g. primary care, secondary care, death registries, COVID testing and vaccination data), providing more comprehensive information for defining the exposure of interest (vaccination), the rare outcomes of interest (myocarditis or pericarditis), key characteristics of the population (e.g., age, sex, ethnicity) and other important comorbidities (e.g. prior COVID infection).
+This repository relates to our analyses of data from over 49.7 million people in England, representing near-complete coverage of the relevant population, to assess the risk of myocarditis and pericarditis following BNT162b2 and ChAdOx1 COVID-19 vaccination. We replicated first dose analyses in Wales (N = 2,615,853) but had insufficient events to replicate other analyses. A self-controlled case series (SCCS) design has previously reported increased risk of myocarditis after first ChAdOx1, BNT162b2, and mRNA-1273 dose and after second doses of mRNA COVID-19 vaccines in England. Here, we use a cohort design to estimate hazard ratios for hospitalised or fatal myocarditis/pericarditis after first and second doses of BNT162b2 and ChAdOx1 vaccinations. SCCS and cohort designs are subject to different assumptions and biases and therefore provide the opportunity for triangulation of evidence. In contrast to the findings from the SCCS approach previously reported for England, we found evidence for lower incidence of hospitalised or fatal myocarditis/pericarditis after first ChAdOx1 and BNT162b2 vaccination, as well as little evidence to suggest higher incidence of these events after second dose of either vaccination.
 
 ## How to cite this work
 https://doi.org/10.1101/2022.03.06.21267462
