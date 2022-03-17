@@ -85,7 +85,7 @@ colnames(cohort_vac)[colSums(is.na(cohort_vac)) > 0]
 # levels(covars$DECI_IMD)
 
 # specific reference levels (not alph order) ----
-covars$cov_ethnicity <- relevel(covars$cov_ethnicity, ref = "White")
+covars$cov_ethnicity <- factor(covars$cov_ethnicity, levels = c("White","Asian","Black","Mixed","Other"))
 # covars$smoking_status <- relevel(covars$smoking_status, ref = "Never_Smoker")
 #cohort_vac$region_name <- relevel(factor(cohort_vac$region_name), ref = "London")
 
