@@ -34,7 +34,7 @@ res_dir_proj <- "P:/torabif/workspace/CCU0002-03/res_myocarditis"
 res_dir_date <- "2021-10-07"
 # specify path to scripts' directory
 scripts_dir <- "P:/torabif/workspace/CCU0002-03"
-dose_str <- "dose1"
+dose_str <- "dose2"
 
 mdl <- "mdl2_agesex"  #, "mdl3a_bkwdselect", "mdl3b_fullyadj", "mdl4_fullinteract_suppl34", "mdl5_anydiag_death28days", "mdl4_fullinteract_suppl34"
 
@@ -60,7 +60,7 @@ if (mdl == "mdl1_unadj"){
 source(file.path(scripts_dir,"si_call_mdl.R"))
 # creates if does not exist and sets working directory
 # dir.create(res_dir, recursive = TRUE)
-setwd(file.path(res_dir))
+#setwd(file.path(res_dir))
 
 
 

@@ -267,8 +267,9 @@ print("section done")
   #===============================================================================
   # FINALIZE age, region, data_surv
   #-------------------------------------------------------------------------------
+print("data surv joining section---------")
   data_surv <- data_surv %>% left_join(df_age_region)
-  return(list(data_surv, noncase_ids, interval_names))
+#  return(list(data_surv, noncase_ids, interval_names))
   print("data surv stuff done")
 
 }
