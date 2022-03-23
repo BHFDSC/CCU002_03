@@ -86,16 +86,6 @@ coxfit_bkwdselection <- function(fml, vac_str, data_surv, sex, interval_names, f
   ))
   
   # save glht ----
-  na_coefs <- which(is.na(coefficients(fit_red))) %>% unname()
-  if (length(na_coefs)>0){  
-    M <- model.matrix(fit_red)[,-na_coefs]
-    data_surv_reduced <- cbind(data_surv %>% dplyr::select(tstart, tstop, event) , M)
-    system.time(fit_red <- coxph(
-      formula = as.formula(paste0("Surv(tstart, tstop, event) ~ `",  paste(colnames(M), collapse="` + `"), "`")), 
-      data = data_surv_reduced, weights=data_surv_reduced$cox_weights
-    ))
-  }
-  
   if (fml == "+ week*agegroup + sex"){
     cat("...... glht @ + week*agegroup + sex ...... \n")
     A <- grep("^weekweek1_2$", names(coef(fit_red)))
