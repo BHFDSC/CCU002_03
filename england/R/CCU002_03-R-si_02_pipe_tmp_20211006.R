@@ -145,13 +145,12 @@ get_vac_specific_dataset <- function(survival_data, vac_of_interest){
     survival_data$DATE_VAC_CENSOR <- as.Date(ifelse(!(survival_data$VACCINE_PRODUCT %in% vac_of_interest),
                                                     survival_data$expo_date, 
                                                     NA), origin='1970-01-01')
-    survival_data <-  transform(survival_data, DATE_VAC_CENSOR = pmin(VACCINATION_DATE_SECOND, DATE_OF_DEATH, DATE_VAC_CENSOR, na.rm=TRUE))
+    survival_data <-  transform(survival_data, DATE_VAC_CENSOR = pmin(VACCINATION_DATE_SECOND, DATE_VAC_CENSOR, na.rm=TRUE))
   } else if (dose_str=="dose2"){
     survival_data <- survival_data %>% dplyr::filter(survival_data$D1_PRODUCT %in% vac_of_interest)
     survival_data$DATE_VAC_CENSOR <- as.Date(ifelse((!(survival_data$VACCINE_PRODUCT %in% vac_of_interest)),
                                                     survival_data$expo_date, 
                                                     NA), origin='1970-01-01')
-    # survival_data <- transform(survival_data, DATE_VAC_CENSOR = pmin(DATE_OF_DEATH, DATE_VAC_CENSOR, na.rm=TRUE))
   }
   
   
