@@ -20,6 +20,14 @@ source("scripts/05d_figure_wales.R")
 
 source("scripts/05e_figure_agedist.R")
 
+# Make age group interaction figure ---------------------------------------------
+
+source("scripts/05f_figure_agegroup.R")
+
+# Make sex interaction figure --------------------------------------------------
+
+source("scripts/05g_figure_sex.R")
+
 # Make supplement --------------------------------------------------------------
 
 rmarkdown::render('scripts/supplement.Rmd', 

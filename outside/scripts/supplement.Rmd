@@ -19,6 +19,10 @@ df$days_post_vaccination <- factor(df$days_post_vaccination, levels = c("0-13","
 df1 <- data.table::fread("../output/waldtests.csv")
 df1$p.value <- ifelse(df1$p.value<0.005,"<0.005",sprintf("%.2f",df1$p.value))
 
+df2 <- data.table::fread("../output/counts.csv")
+df2 <- df2[df2$outcome=="myocarditis/pericarditis",]
+df2[,c("outcome","prior_covid")] <- NULL
+
 ```
 
 \newpage
@@ -92,6 +96,15 @@ knitr::include_graphics("../output/figure_agedist.jpeg")
 ```{r overall_dose1}
 tmp <- df[df$dose=="Dose 1" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
           c("exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
+
+tmp <- merge(tmp, df2[df2$dose=="Dose 1",], by = c("exposure","days_post_vaccination"), all.y = TRUE)
+tmp$estimate <- ifelse(tmp$days_post_vaccination=="Before",1,tmp$estimate)
+tmp$conf.low <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$conf.low, 2)))
+tmp$conf.high <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$conf.high, 2)))
+tmp$p.value <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$p.value, 2)))
+tmp$days_post_vaccination <- factor(tmp$days_post_vaccination, levels = c("Before","0-13","14+"))
+tmp$dose <- NULL
+
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
@@ -100,87 +113,86 @@ knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```{r overall_dose2}
 tmp <- df[df$dose=="Dose 2" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
           c("exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
+
+tmp <- merge(tmp, df2[df2$dose=="Dose 2",], by = c("exposure","days_post_vaccination"), all.y = TRUE)
+tmp$estimate <- ifelse(tmp$days_post_vaccination=="Before",1,tmp$estimate)
+tmp$conf.low <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$conf.low, 2)))
+tmp$conf.high <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$conf.high, 2)))
+tmp$p.value <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$p.value, 2)))
+tmp$days_post_vaccination <- factor(tmp$days_post_vaccination, levels = c("Before","0-13","14+"))
+tmp$dose <- NULL
+
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 \newpage
 
-# Estimates, by sex
+# Interactions, by sex
 
-## Dose 1
+## Estimates
 
-```{r sex_dose1}
-tmp <- df[df$dose=="Dose 1" & df$sex!="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
-          c("exposure","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$sex),], digits=2)
+```{r echo=FALSE, results = 'asis', out.width="90%"}
+knitr::include_graphics("../output/figure_sex.jpeg")
 ```
 
-## Dose 2
-
-```{r sex_dose2}}
-tmp <- df[df$dose=="Dose 2" & df$sex!="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
-          c("exposure","days_post_vaccination","sex","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$sex),], digits=2)
+```{r sex}
+tmp <- df[df$sex!="All" & df$prior_covid=="All" & df$nation=="England" & df$age_group=="All" & df$outcome=="myocarditis/pericarditis",
+          c("sex","dose","exposure","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$sex,tmp$dose,tmp$exposure),], digits=2)
 ```
 
 \newpage
 
-# Estimates, by age group
+## Heterogeneity p-values
 
-## Dose 1
-
-```{r age_dose1}
-tmp <- df[df$dose=="Dose 1" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group!="All",
-          c("exposure","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$age_group),], digits=2)
-```
-
-## Dose 2
-
-```{r age_dose2}
-tmp <- df[df$dose=="Dose 2" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group!="All",
-          c("exposure","days_post_vaccination","age_group","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination,tmp$age_group),], digits=2)
-```
-
-\newpage
-
-# Heterogeneity p-values
-
-## Dose 1
-
-### Sex
+### Dose 1
 
 ```{r hetero_sex_dose1}
-tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Sex" & df1$outcome=="myocarditis/pericarditis",
+tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Sex" & df1$outcome=="myocarditis/pericarditis" & df1$priorcovid=="All",
            c("exposure","days_post_vaccination","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
-### Age group
+### Dose 2
 
-```{r hetero_age_dose1}
-tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Age group" & df1$outcome=="myocarditis/pericarditis",
+```{r hetero_sex_dose2}
+tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Sex" & df1$outcome=="myocarditis/pericarditis" & df1$priorcovid=="All",
            c("exposure","days_post_vaccination","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
 \newpage
 
-## Dose 2
+# Interactions, by age group
 
-### Sex
+## Estimates
 
-```{r hetero_sex_dose2}
-tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Sex" & df1$outcome=="myocarditis/pericarditis",
+```{r echo=FALSE, results = 'asis', out.width="90%"}
+knitr::include_graphics("../output/figure_agegroup.jpeg")
+```
+
+```{r age_group}
+tmp <- df[df$dose=="Dose 1" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group!="All",
+          c("age_group","dose","exposure","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$age_group,tmp$dose,tmp$exposure),], digits=2)
+```
+
+\newpage
+
+## Heterogeneity p-values
+
+### Dose 1
+
+```{r hetero_age_dose1}
+tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Age group" & df1$outcome=="myocarditis/pericarditis" & df1$priorcovid=="All",
            c("exposure","days_post_vaccination","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
 
-### Age group
+### Dose 2
 
 ```{r hetero_age_dose2}
-tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Age group" & df1$outcome=="myocarditis/pericarditis",
+tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Age group" & df1$outcome=="myocarditis/pericarditis" & df1$priorcovid=="All",
            c("exposure","days_post_vaccination","p.value")]
 knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
 ```
@@ -225,8 +237,8 @@ knitr::include_graphics("../output/figure_wales.jpeg")
 
 ```{r wales_events}
 tmp <- data.table::fread("../output/wales.csv")
-tmp <- tmp[,c("outcome","dose","exposure","days_post_vaccination","events")]
-knitr::kable(tmp[order(tmp$outcome,tmp$dose,tmp$exposure),], digits=2)
+tmp <- tmp[,c("dose","exposure","days_post_vaccination","events")]
+knitr::kable(tmp[order(tmp$dose,tmp$exposure),], digits=2)
 ```
 
 ## Estimates
@@ -234,8 +246,8 @@ knitr::kable(tmp[order(tmp$outcome,tmp$dose,tmp$exposure),], digits=2)
 ```{r wales_estimates}
 tmp <- data.table::fread("../output/wales.csv")
 tmp <- tmp[tmp$days_post_vaccination!="Before",
-           c("outcome","dose","exposure","days_post_vaccination","estimate","conf.low","conf.high")]
-knitr::kable(tmp[order(tmp$outcome,tmp$dose,tmp$exposure),], digits=2)
+           c("dose","exposure","days_post_vaccination","estimate","conf.low","conf.high")]
+knitr::kable(tmp[order(tmp$dose,tmp$exposure),], digits=2)
 ```
 
 \newpage
