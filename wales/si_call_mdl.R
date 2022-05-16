@@ -6,17 +6,19 @@
 ## =============================================================================
 source(file.path(scripts_dir,"si_fit_model.R"))
   
-  
+event= "any_myo_or_pericarditis"  
+
 get_vacc_res <- function(sex_as_interaction, event, vac_str, agegp, cohort_vac, covars){
   outcomes <- qread(master_df_fpath) %>% 
-            dplyr::select(
+            dplyr::select(c(
             "NHS_NUMBER_DEID", 
-                   "out_any_myo_or_pericarditis" ,
-                   "out_death")
-  print(c("NHS_NUMBER_DEID", paste0("out_", event)))
+            paste0("out_", dose_str, "_", event)))
+  
+  print(c("NHS_NUMBER_DEID", paste0("out_",dose_str, "_", event)))
+  
   outcomes$name <- event
   setnames(outcomes, 
-           old = c(paste0("out_", event)), 
+           old = c(paste0("out_",dose_str, "_", event)), 
            new = c("record_date"))
   
   if (dose_str=="dose2"){
