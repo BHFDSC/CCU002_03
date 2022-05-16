@@ -6,19 +6,13 @@
 ## =============================================================================
 print(rstudioapi::getSourceEditorContext()$path)
 
-ls_events <- c("any_myo_or_pericarditis")
+ls_events <- c("myocarditis")
 
 
 # specify path to data
-master_df_fpath <- "~/dars_nic_391419_j3w9t_collab/CCU002_03/data/ccu002_03_cohort_20211006.csv.gz"
-# if (dose_str == "dose2"){
-#   master_df_fpath <- "~/dars_nic_391419_j3w9t_collab/CCU002_03/data/ccu002_03_cohort_20210915.csv.gz"
-# } else if (dose_str == "dose1"){
-#   master_df_fpath <- "~/dars_nic_391419_j3w9t_collab/CCU002_03/data/ccu002_03_cohort_firstdose_20210924.csv.gz"
-#   vaccination_dose2_date_fpath <- "~/dars_nic_391419_j3w9t_collab/CCU002_03/data/ccu002_03_cohort_20210915.csv.gz"
-#   }
-# old_master_df_fpath <- "~/dars_nic_391419_j3w9t_collab/CCU002_02/data/ccu002_vacc_cohort.csv.gz" # was for region 
-
+master_df_fpath <- "~/dars_nic_391419_j3w9t_collab/CCU002_03/data/ccu002_03_cohort_20220126.csv.gz"
+master_names <- fread(master_df_fpath, nrows=1)
+sort(names(master_names))
 
 # specify study parameters
 agebreaks <- c(0, 40, 70, 500)
@@ -31,20 +25,13 @@ noncase_frac <- 0.1
 cohort_start_date <- as.Date("2020-12-08")
 cohort_end_date <- as.Date("2021-05-17")
 
-cuts_weeks_since_expo <- c(2, as.numeric(ceiling(difftime(cohort_end_date,cohort_start_date)/7))) 
+cuts_weeks_since_expo <- c(2, as.numeric(ceiling(difftime(cohort_end_date,cohort_start_date)/7)))
+# cuts_weeks_since_expo <- c(as.numeric(ceiling(difftime(cohort_end_date,cohort_start_date)/7))) # reviewer's request
+
 cuts_weeks_since_expo_reduced <- c(4, as.numeric(ceiling(difftime(cohort_end_date,cohort_start_date)/7))) 
 
 expo <- ifelse(dose_str == "dose2", "VAC2", "VAC1")
 
-
-
-
-# inspect column names of dataset
-master_names <- fread(master_df_fpath, nrows=1)
-sort(names(master_names))
-
-# old_master_names <- fread(old_master_df_fpath, nrows=1)
-# sort(names(old_master_names))
 
 #=========================== READ IN DATA ======================================
 # cohort_vac ----
@@ -85,6 +72,7 @@ if (dose_str=="dose1"){
                                "cov_dose2_age", 
                                "vaccination_dose1_date", 
                                "vaccination_dose2_date", 
+                               "vaccination_dose1_product",
                                "vaccination_dose2_product",
                                "cov_dose2_region"
                       ))
@@ -96,6 +84,7 @@ if (dose_str=="dose1"){
                    "vaccination_dose2_date", 
                    "vaccination_dose2_product", 
                    "vaccination_dose1_date",
+                   "vaccination_dose1_product",
                    "cov_dose2_region"), 
            new = c("SEX", 
                    "DATE_OF_DEATH", 
@@ -103,17 +92,9 @@ if (dose_str=="dose1"){
                    "VACCINATION_DATE", 
                    "VACCINE_PRODUCT", 
                    "START_DATE",
+                   "D1_PRODUCT",
                    "region_name"))
 }
-
-
-# # merge region_name from old df ----
-# df_region <- fread(old_master_df_fpath, 
-#                     select=c("NHS_NUMBER_DEID", 
-#                              "region_name"
-#                     ))
-# cohort_vac <- merge(cohort_vac, df_region, all.x=TRUE)
-# any(is.na(cohort_vac$region_name))
 
 print("got cohort_vac with regions ......")
 
@@ -158,13 +139,19 @@ set_dates_outofrange_na <- function(df, colname)
 
 #=======================GET VACCINE-SPECIFIC DATASET============================
 get_vac_specific_dataset <- function(survival_data, vac_of_interest){
-  survival_data$DATE_VAC_CENSOR <- as.Date(ifelse(!(survival_data$VACCINE_PRODUCT %in% vac_of_interest),
-                                                  survival_data$expo_date, 
-                                                  NA), origin='1970-01-01')
+
   
   if (dose_str=="dose1"){
-    survival_data <-  transform(survival_data, DATE_VAC_CENSOR = pmin(VACCINATION_DATE_SECOND, DATE_OF_DEATH, DATE_VAC_CENSOR, na.rm=TRUE))
-  } 
+    survival_data$DATE_VAC_CENSOR <- as.Date(ifelse(!(survival_data$VACCINE_PRODUCT %in% vac_of_interest),
+                                                    survival_data$expo_date, 
+                                                    NA), origin='1970-01-01')
+    survival_data <-  transform(survival_data, DATE_VAC_CENSOR = pmin(VACCINATION_DATE_SECOND, DATE_VAC_CENSOR, na.rm=TRUE))
+  } else if (dose_str=="dose2"){
+    survival_data <- survival_data %>% dplyr::filter(survival_data$D1_PRODUCT %in% vac_of_interest)
+    survival_data$DATE_VAC_CENSOR <- as.Date(ifelse((!(survival_data$VACCINE_PRODUCT %in% vac_of_interest)),
+                                                    survival_data$expo_date, 
+                                                    NA), origin='1970-01-01')
+  }
   
   
   survival_data$expo_date <- as.Date(ifelse((!is.na(survival_data$DATE_VAC_CENSOR)) & (survival_data$expo_date >= survival_data$DATE_VAC_CENSOR), NA, survival_data$expo_date), origin='1970-01-01')
