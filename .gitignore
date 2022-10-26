@@ -1,10 +1,12 @@
-
 .DS_Store
 .Rproj.user
 outside/.Rhistory
 outside/raw/*
 *.Rproj
 tmp/*
+outside/output/*
 outside/scripts/.Rhistory
-outside/output/hidden*
 outside/.RData
+documents
+outside/scripts/tmp_presentation.R
+outside/output/estimates.csv

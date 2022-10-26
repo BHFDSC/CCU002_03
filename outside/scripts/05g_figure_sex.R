@@ -9,15 +9,18 @@ df <- data.table::fread("output/estimates.csv", data.table = FALSE)
 
 # Filter to relevant data ------------------------------------------------------
 
-df <- df[df$outcome=="myocarditis/pericarditis" & 
+df <- df[df$outcome=="Myocarditis" & 
            df$nation=="England" &
            df$age_group=="All" &
            df$sex!="All" &
-           df$prior_covid=="All",]
+           df$prior_covid=="All" &
+           df$extended_fup==FALSE,]
+
+df$days <- ifelse(df$term=="day0_14","0-13","14+")
 
 # Make plot --------------------------------------------------------------------
 
-ggplot2::ggplot(df, mapping = ggplot2::aes(x=days_post_vaccination, 
+ggplot2::ggplot(df, mapping = ggplot2::aes(x=days, 
                                            y=estimate, 
                                            color=exposure, 
                                            shape=sex)) +

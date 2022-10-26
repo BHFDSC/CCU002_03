@@ -1,5 +1,5 @@
 ---
-title: Risk of myocarditis and pericarditis following BNT162b2 and ChAdOx1 COVID-19 vaccinations
+title: Risk of myocarditis following BNT162b2 and ChAdOx1 COVID-19 vaccinations
 output: pdf_document
 ---
 
@@ -14,264 +14,155 @@ df$dose <- factor(df$dose, levels = c("Dose 1","Dose 2"))
 df$age_group <- factor(df$age_group, levels = c("All","<40","40-69","70+"))
 df$sex <- factor(df$sex, levels = c("All","Male","Female"))
 df$exposure <- factor(df$exposure, levels = c("BNT162b2","ChAdOx1-S"))
-df$days_post_vaccination <- factor(df$days_post_vaccination, levels = c("0-13","14+"))
+df$term <- ifelse(df$term=="day0_14","0-13","14+")
+df$term <- factor(df$term, levels = c("0-13","14+"))
 
 df1 <- data.table::fread("../output/waldtests.csv")
 df1$p.value <- ifelse(df1$p.value<0.005,"<0.005",sprintf("%.2f",df1$p.value))
 
 df2 <- data.table::fread("../output/counts.csv")
-df2 <- df2[df2$outcome=="myocarditis/pericarditis",]
+df2 <- df2[df2$outcome=="Myocarditis",]
 df2[,c("outcome","prior_covid")] <- NULL
 
 ```
 
 \newpage
 
-# Sample size
+# Supplementary Figure 1: Patient age distribution
 
-## Dose 1
+TO BE UPDATED
 
-```{r n_dose1}
-knitr::kable(doses[doses$analysis_dose=="Dose 1",c("analysis_product","sample","N")], digits=2)
-```
+\newpage 
 
-## Dose 2
+# Supplementary Figure 2: Dose 1 replication in Wales
 
-```{r n_dose2}
-knitr::kable(doses[doses$analysis_dose=="Dose 2",c("analysis_product","sample","N")], digits=2)
-```
+TO BE UPDATED
 
 \newpage
 
-# Patient characteristics
-
-
-```{r table1}
-table1 <- data.table::fread("../raw/england/table1.csv")
-
-table1$category <- gsub("1_2","Quintile 1 (most deprived)",table1$category)
-table1$category <- gsub("3_4","Quintile 2",table1$category)
-table1$category <- gsub("5_6","Quintile 3",table1$category)
-table1$category <- gsub("7_8","Quintile 4",table1$category)
-table1$category <- gsub("9_10","Quintile 5 (least deprived)",table1$category)
-
-table1 <- suppressWarnings(tidyr::separate(table1, category, into = c("category","subcategory"), sep = "_"))
-
-table1$category <- substr(gsub("([A-Z])"," \\1",table1$category),2,.Machine$integer.max)
-
-table1$subcategory <- ifelse(is.na(table1$subcategory),"",
-                             substr(gsub("([A-Z])"," \\1",table1$subcategory),2,.Machine$integer.max))
-
-table1$subcategory <- ifelse(table1$subcategory=="Asian", "Asian or Asian British", table1$subcategory)
-table1$subcategory <- ifelse(table1$subcategory=="Black", "Black or Black British", table1$subcategory)
-table1$subcategory <- ifelse(table1$subcategory=="Other", "Other Ethnic Groups", table1$subcategory)
-table1$category <- ifelse(table1$category=="Medical History", "History", table1$category)
-table1$subcategory <- ifelse(table1$subcategory=="Myopericarditis", "Myocarditis/pericarditis", table1$subcategory)
-
-table1 <- table1[,c("category","subcategory",
-                    "Pfizer_under40_all","Pfizer_40_69_all","Pfizer_70plus_all",
-                    "AstraZeneca_under40_all","AstraZeneca_40_69_all","AstraZeneca_70plus_all")]
-
-colnames(table1) <- c("Category","Sub-category",
-                    "BNT162b2"," ","  ",
-                    "ChAdOx1","   ","    ")
-
-knitr::kable(table1,)
-```
-
-\newpage
-
-# Patient age distribution
-
-```{r echo=FALSE, results = 'asis', out.width="90%"}
-knitr::include_graphics("../output/figure_agedist.jpeg")
-```
-
-\newpage
-
-# Estimates, overall
-
-## Dose 1
-
-```{r overall_dose1}
-tmp <- df[df$dose=="Dose 1" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
-          c("exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
-
-tmp <- merge(tmp, df2[df2$dose=="Dose 1",], by = c("exposure","days_post_vaccination"), all.y = TRUE)
-tmp$estimate <- ifelse(tmp$days_post_vaccination=="Before",1,tmp$estimate)
-tmp$conf.low <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$conf.low, 2)))
-tmp$conf.high <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$conf.high, 2)))
-tmp$p.value <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$p.value, 2)))
-tmp$days_post_vaccination <- factor(tmp$days_post_vaccination, levels = c("Before","0-13","14+"))
-tmp$dose <- NULL
-
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
-```
-
-## Dose 2
-
-```{r overall_dose2}
-tmp <- df[df$dose=="Dose 2" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group=="All",
-          c("exposure","days_post_vaccination","estimate","conf.low","conf.high","p.value")]
-
-tmp <- merge(tmp, df2[df2$dose=="Dose 2",], by = c("exposure","days_post_vaccination"), all.y = TRUE)
-tmp$estimate <- ifelse(tmp$days_post_vaccination=="Before",1,tmp$estimate)
-tmp$conf.low <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$conf.low, 2)))
-tmp$conf.high <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$conf.high, 2)))
-tmp$p.value <- ifelse(tmp$days_post_vaccination=="Before","",paste0(round(tmp$p.value, 2)))
-tmp$days_post_vaccination <- factor(tmp$days_post_vaccination, levels = c("Before","0-13","14+"))
-tmp$dose <- NULL
-
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
-```
-
-\newpage
-
-# Interactions, by sex
-
-## Estimates
+# Supplementary Figure 3: Interactions, by sex
 
 ```{r echo=FALSE, results = 'asis', out.width="90%"}
 knitr::include_graphics("../output/figure_sex.jpeg")
 ```
 
-```{r sex}
-tmp <- df[df$sex!="All" & df$prior_covid=="All" & df$nation=="England" & df$age_group=="All" & df$outcome=="myocarditis/pericarditis",
-          c("sex","dose","exposure","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$sex,tmp$dose,tmp$exposure),], digits=2)
-```
-
 \newpage
 
-## Heterogeneity p-values
-
-### Dose 1
-
-```{r hetero_sex_dose1}
-tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Sex" & df1$outcome=="myocarditis/pericarditis" & df1$priorcovid=="All",
-           c("exposure","days_post_vaccination","p.value")]
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
-```
-
-### Dose 2
-
-```{r hetero_sex_dose2}
-tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Sex" & df1$outcome=="myocarditis/pericarditis" & df1$priorcovid=="All",
-           c("exposure","days_post_vaccination","p.value")]
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
-```
-
-\newpage
-
-# Interactions, by age group
-
-## Estimates
+# Supplementary Figure 4: Interactions, by age group
 
 ```{r echo=FALSE, results = 'asis', out.width="90%"}
 knitr::include_graphics("../output/figure_agegroup.jpeg")
 ```
 
+\newpage
+
+# Supplementary Figure 5: Estimates, by prior history
+
+```{r echo=FALSE, results = 'asis', out.width="90%"}
+knitr::include_graphics("../output/figure_priorcovid.jpeg")
+```
+
+\newpage
+
+# Supplementary Figure 6: Estimates for pericarditis
+
+```{r echo=FALSE, results = 'asis', out.width="90%"}
+knitr::include_graphics("../output/figure_Pericarditis.jpeg")
+```
+
+\newpage
+
+# Supplementary Table 1a: Estimates, dose 1
+
+```{r overall_dose1}
+tmp <- df[df$dose=="Dose 1" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="Myocarditis" & df$age_group=="All",
+          c("exposure","term","estimate","conf.low","conf.high","p.value")]
+
+tmp <- merge(tmp, df2[df2$dose=="Dose 1",], by = c("exposure","term"), all.y = TRUE)
+tmp$estimate <- ifelse(tmp$term=="Before",1,tmp$estimate)
+tmp$conf.low <- ifelse(tmp$term=="Before","",paste0(round(tmp$conf.low, 2)))
+tmp$conf.high <- ifelse(tmp$term=="Before","",paste0(round(tmp$conf.high, 2)))
+tmp$p.value <- ifelse(tmp$term=="Before","",paste0(round(tmp$p.value, 2)))
+tmp$term <- factor(tmp$term, levels = c("Before","0-13","14+"))
+tmp$dose <- NULL
+
+knitr::kable(tmp[order(tmp$exposure,tmp$term),], digits=2)
+```
+
+# Supplementary Table 1b: Estimates, dose 2
+
+```{r overall_dose2}
+tmp <- df[df$dose=="Dose 2" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="Myocarditis" & df$age_group=="All",
+          c("exposure","term","estimate","conf.low","conf.high","p.value")]
+
+tmp <- merge(tmp, df2[df2$dose=="Dose 2",], by = c("exposure","term"), all.y = TRUE)
+tmp$estimate <- ifelse(tmp$term=="Before",1,tmp$estimate)
+tmp$conf.low <- ifelse(tmp$term=="Before","",paste0(round(tmp$conf.low, 2)))
+tmp$conf.high <- ifelse(tmp$term=="Before","",paste0(round(tmp$conf.high, 2)))
+tmp$p.value <- ifelse(tmp$term=="Before","",paste0(round(tmp$p.value, 2)))
+tmp$term <- factor(tmp$term, levels = c("Before","0-13","14+"))
+tmp$dose <- NULL
+
+knitr::kable(tmp[order(tmp$exposure,tmp$term),], digits=2)
+```
+
+\newpage
+
+# Supplementary Table 2: Dose 1 replication in Wales 
+
+TO BE UPDATED
+
+\newpage
+
+# Supplementary Table 3: Interactions, by age group
+
 ```{r age_group}
-tmp <- df[df$dose=="Dose 1" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="myocarditis/pericarditis" & df$age_group!="All",
+tmp <- df[df$dose=="Dose 1" & df$nation=="England" & df$sex=="All" & df$prior_covid=="All" & df$outcome=="Myocarditis" & df$age_group!="All",
           c("age_group","dose","exposure","estimate","conf.low","conf.high","p.value")]
 knitr::kable(tmp[order(tmp$age_group,tmp$dose,tmp$exposure),], digits=2)
 ```
 
 \newpage
 
-## Heterogeneity p-values
+# Supplementary Table 4: Interactions, by sex
 
-### Dose 1
-
-```{r hetero_age_dose1}
-tmp <- df1[df1$dose=="Dose 1" & df1$interacting_feature=="Age group" & df1$outcome=="myocarditis/pericarditis" & df1$priorcovid=="All",
-           c("exposure","days_post_vaccination","p.value")]
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
-```
-
-### Dose 2
-
-```{r hetero_age_dose2}
-tmp <- df1[df1$dose=="Dose 2" & df1$interacting_feature=="Age group" & df1$outcome=="myocarditis/pericarditis" & df1$priorcovid=="All",
-           c("exposure","days_post_vaccination","p.value")]
-knitr::kable(tmp[order(tmp$exposure,tmp$days_post_vaccination),], digits=2)
+```{r sex}
+tmp <- df[df$sex!="All" & df$prior_covid=="All" & df$nation=="England" & df$age_group=="All" & df$outcome=="Myocarditis",
+          c("sex","dose","exposure","estimate","conf.low","conf.high","p.value")]
+knitr::kable(tmp[order(tmp$sex,tmp$dose,tmp$exposure),], digits=2)
 ```
 
 \newpage
 
-# Estimates, by prior history
+# Supplementary Table 5a: Heterogeneity p-values, dose 1
 
-```{r echo=FALSE, results = 'asis', out.width="90%"}
-knitr::include_graphics("../output/figure_priorcovid.jpeg")
-```
+TO BE UPDATED
+
+# Supplementary Table 5b: Heterogeneity p-values, dose 2
+
+TO BE UPDATED
+
+\newpage
+
+# Supplementary Table 6: Estimates, by prior history
 
 ```{r prior_history}
-tmp <- df[df$sex=="All" & df$prior_covid!="All" & df$nation=="England" & df$age_group=="All" & df$outcome=="myocarditis/pericarditis",
+tmp <- df[df$sex=="All" & df$prior_covid!="All" & df$nation=="England" & df$age_group=="All" & df$outcome=="Myocarditis",
           c("prior_covid","dose","exposure","estimate","conf.low","conf.high","p.value")]
 knitr::kable(tmp[order(tmp$prior_covid,tmp$dose,tmp$exposure),], digits=2)
 ```
 
 \newpage
 
-# Estimates, by individual outcome
-
-```{r echo=FALSE, results = 'asis', out.width="90%"}
-knitr::include_graphics("../output/figure_outcomes.jpeg")
-```
+# Supplementary Table 7: Estimates for pericarditis
 
 ```{r outcomes}
-tmp <- df[df$sex=="All" & df$prior_covid=="All" & df$nation=="England" & df$age_group=="All" & df$outcome!="myocarditis/pericarditis",
-          c("outcome","dose","exposure","estimate","conf.low","conf.high","p.value")]
-knitr::kable(tmp[order(tmp$outcome,tmp$dose,tmp$exposure),], digits=2)
-```
-
-\newpage
-
-# Dose 1 replication in Wales
-
-```{r echo=FALSE, results = 'asis', out.width="90%"}
-knitr::include_graphics("../output/figure_wales.jpeg")
-```
-
-## Events
-
-```{r wales_events}
-tmp <- data.table::fread("../output/wales.csv")
-tmp <- tmp[,c("dose","exposure","days_post_vaccination","events")]
+tmp <- df[df$sex=="All" & 
+            df$prior_covid=="All" & 
+            df$nation=="England" & 
+            df$age_group=="All" & 
+            df$outcome=="Pericarditis" &
+            df$extended_fup==FALSE,
+          c("dose","exposure","term","estimate","conf.low","conf.high","p.value")]
 knitr::kable(tmp[order(tmp$dose,tmp$exposure),], digits=2)
 ```
-
-## Estimates
-
-```{r wales_estimates}
-tmp <- data.table::fread("../output/wales.csv")
-tmp <- tmp[tmp$days_post_vaccination!="Before",
-           c("dose","exposure","days_post_vaccination","estimate","conf.low","conf.high")]
-knitr::kable(tmp[order(tmp$dose,tmp$exposure),], digits=2)
-```
-
-\newpage
-
-# Contributions to this work
-
-This work was conducted on behalf of the BHF Data Science Centre (Health Data Research UK) CVD-COVID-UK/COVID-IMPACT Consortium and the Longitudinal Health and Wellbeing and Data and Connectivity UK COVID-19 National Core Studies. Samantha Ip developed the analysis code and implemented the analysis in England; Fatemeh Torabi derived the dataset for Wales and implemented the analysis in Wales; and Venexia Walker derived the dataset for England, combined and visualised the results from both nations, and drafted the report. The work relied on the support of the CCU002 project group, members of which include: Angela Wood (University of Cambridge), Arun Karthikeyan Suseeladevi (University of Bristol), Ashley Akbari (Swansea University), Cathie Sudlow (BHF Data Science Centre), Emanuele Di Angelantonio (University of Cambridge), Efosa Omigie (NHS Digital), Fatemeh Torabi (Swansea University), Hoda Abbasizanjani (Swansea University), Jennifer Cooper (University of Bristol), Jonathan Sterne (University of Bristol), Rachel Denholm (University of Bristol), Rochelle Knight (University of Bristol), Sam Hollings (NHS Digital), Samantha Ip (University of Cambridge), Spencer Keene (University of Cambridge), Spiros Denaxas (University College London), Teri-Louise North (University of Bristol), Thomas Bolton (BHF Data Science Centre), Venexia Walker (University of Bristol) and William Whiteley (University of Edinburgh). The project was conceived by this group, all members of which contributed to the development of the protocol (https://github.com/BHFDSC/CCU002_03/blob/main/protocol/COVID%20vaccination%20and%20myocarditis%20and%20pericarditis.pdf). Members of the group also reviewed and discussed analysis results and their interpretation, including in the context of other relevant published studies.
- 
-# Funding
-
-This work was supported by: the BHF Data Science Centre led by Health Data Research UK (BHF Grant no. SP/19/3/34678); the COVID-19 Longitudinal Health and Wellbeing National Core Study funded by the Medical Research Council [MC_PC_20030; MC_PC_20059]; the Con-COV team funded by the Medical Research Council (grant number: MR/V028367/1); Health Data Research UK, which receives its core funding from the UK Medical Research Council, Engineering and Physical Sciences Research Council, Economic and Social Research Council, Department of Health and Social Care (England), Chief Scientist Office of the Scottish Government Health and Social Care Directorates, Health and Social Care Research and Development Division (Welsh Government), Public Health Agency (Northern Ireland), British Heart Foundation (BHF) and the Wellcome Trust; the Wales COVID-19 Evidence Centre, funded by Health and Care Research Wales; the ADR Wales programme of work, which is aligned to the priority themes as identified in the Welsh Government’s national strategy, Prosperity for All, and brings together data science experts at Swansea University Medical School, staff from the Wales Institute of Social and Economic Research, Data and Methods (WISERD) at Cardiff University and specialist teams within the Welsh Government to develop new evidence which supports Prosperity for All by using the SAIL Databank at Swansea University, to link and analyse anonymised data. ADR Wales is part of the Economic and Social Research Council (part of UK Research and Innovation) funded ADR UK (grant ES/S007393/1). This research is part of the Data and Connectivity National Core Study, led by Health Data Research UK in partnership with the Office for National Statistics and funded by UK Research and Innovation (grant ref: MC_PC_20058). SI was funded by the International Alliance for Cancer Early Detection, a partnership between Cancer Research UK C18081/A31373, Canary Center at Stanford University, the University of Cambridge, OHSU Knight Cancer Institute, University College London and the University of Manchester. VW was supported by the Medical Research Council Integrative Epidemiology Unit at the University of Bristol [MC_UU_00011/4] and the National Core Studies, an initiative funded by UKRI, NIHR and the Health and Safety Executive.
-
-# Other acknowledgements
-
-This work makes use of de-identified data held in NHS Digital’s TRE for England and the SAIL Databank for Wales, made available via the BHF Data Science Centre’s CVD-COVID-UK/COVID-IMPACT consortium. This work uses data provided by patients and collected by the NHS as part of their care and support. We would like to acknowledge all data providers who make health relevant data available for research.
-
-This study makes use of anonymised data held in the Secure Anonymised Information Linkage (SAIL) Databank. This work uses data provided by patients and collected by the NHS as part of their care and support. We would also like to acknowledge all data providers who make anonymised data available for research. We wish to acknowledge the collaborative partnership that enabled acquisition and access to the de-identified data, which led to this output. The collaboration was led by the Swansea University Health Data Research UK team under the direction of the Welsh Government Technical Advisory Cell (TAC) and includes the following groups and organisations: the SAIL Databank, Administrative Data Research (ADR) Wales, Digital Health and Care Wales (DHCW), Public Health Wales, NHS Shared Services Partnership (NWSSP) and the Welsh Ambulance Service Trust (WAST). All research conducted has been completed under the permission and approval of the SAIL independent Information Governance Review Panel (IGRP) project number 0911.
-
-# Data availability
-
-The data used in this study are available in NHS Digital’s TRE for England, but as restrictions apply they are not publicly available (https://digital.nhs.uk/coronavirus/coronavirus-data-services-updates/trusted-research-environment-service-for-england).  The CVD-COVID-UK/COVID-IMPACT programme led by the BHF Data Science Centre (https://www.hdruk.ac.uk/helping-with-health-data/bhf-data-science-centre/) received approval to access data in NHS Digital’s TRE for England from the Independent Group Advising on the Release of Data (IGARD) (https://digital.nhs.uk/about-nhs-digital/corporate-information-and-documents/independent-group-advising-on-the-release-of-data) via an application made in the Data Access Request Service (DARS) Online system (ref. DARS-NIC-381078-Y9C5K) (https://digital.nhs.uk/services/data-access-request-service-dars/dars-products-and-services).  The CVD-COVID-UK/COVID-IMPACT Approvals & Oversight Board (https://www.hdruk.ac.uk/projects/cvd-covid-uk-project/) subsequently granted approval to this project to access the data within the TRE for England and the Secure Anonymised Information Linkage (SAIL) Databank.  The de-identified data used in this study was made available to accredited researchers only.
-
-The data used in this study are available in the SAIL Databank at Swansea University, Swansea, UK, but as restrictions apply they are not publicly available. All proposals to use SAIL data are subject to review by an independent Information Governance Review Panel (IGRP). Before any data can be accessed, approval must be given by the IGRP. The IGRP gives careful consideration to each project to ensure proper and appropriate use of SAIL data. When access has been granted, it is gained through a privacy protecting safe haven and remote access system referred to as the SAIL Gateway. SAIL has established an application process to be followed by anyone who would like to access data via SAIL at https://www.saildatabank.com/application-process
-
-# Ethical approval
-
-The North East-Newcastle and North Tyneside 2 research ethics committee provided ethical approval for the CVD-COVID-UK/COVID-IMPACT research programme (REC No 20/NE/0161).
