@@ -1,7 +1,0 @@
-outcome,nation,dose,age_group,sex,exposure,days_post_vaccination,prior_covid,events,estimate,conf.low,conf.high
-myocarditis/pericarditis,Wales,Dose 1,All,All,ChAdOx1-S,Before,All,43,,,
-myocarditis/pericarditis,Wales,Dose 1,All,All,ChAdOx1-S,0-13,All,<5,1.41,0.31,6.44
-myocarditis/pericarditis,Wales,Dose 1,All,All,ChAdOx1-S,14+,All,14,3.86,1.65,9.03
-myocarditis/pericarditis,Wales,Dose 1,All,All,BNT162b2,Before,All,43,,,
-myocarditis/pericarditis,Wales,Dose 1,All,All,BNT162b2,0-13,All,<5,1.16,0.16,8.35
-myocarditis/pericarditis,Wales,Dose 1,All,All,BNT162b2,14+,All,14,2.89,0.85,9.77
