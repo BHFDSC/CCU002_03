@@ -4,9 +4,9 @@ outside/.Rhistory
 outside/raw/*
 *.Rproj
 tmp/*
-outside/output/*
 outside/scripts/.Rhistory
 outside/.RData
 documents
 outside/scripts/tmp_presentation.R
-outside/output/estimates.csv
+outside/output/*
+!outside/output/README.md
